@@ -6,327 +6,377 @@
 <title>Học Tiếng Nhật 🇯🇵</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-
   body {
     font-family: 'Segoe UI', sans-serif;
     background: #0f0f1a;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    padding: 24px;
+    display: flex; flex-direction: column; align-items: center;
+    color: #fff; padding: 24px 16px;
   }
 
-  /* ── Teacher avatar area ── */
+  /* ── Settings bar ── */
+  .settings {
+    width: 100%; max-width: 500px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 24px;
+  }
+  .setting-group { display: flex; flex-direction: column; gap: 4px; }
+  .setting-group label { font-size: 0.7rem; color: #475569; }
+  select {
+    background: #1a1a2e; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; color: #a5b4fc; padding: 7px 12px;
+    font-size: 0.8rem; outline: none; cursor: pointer;
+  }
+  select:focus { border-color: #6366f1; }
+
+  /* ── Teacher ── */
   .teacher-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 32px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; margin-bottom: 24px;
   }
-
   .avatar-ring {
-    width: 120px; height: 120px;
-    border-radius: 50%;
+    width: 110px; height: 110px; border-radius: 50%;
     background: linear-gradient(135deg, #6366f1, #a855f7);
     display: flex; align-items: center; justify-content: center;
-    font-size: 3.2rem;
-    position: relative;
-    transition: box-shadow 0.3s;
+    font-size: 3rem; transition: box-shadow 0.3s;
   }
-  .avatar-ring.speaking {
-    box-shadow: 0 0 0 6px rgba(99,102,241,0.3), 0 0 0 14px rgba(99,102,241,0.15), 0 0 0 24px rgba(99,102,241,0.07);
-    animation: ripple 1.5s infinite;
-  }
+  .avatar-ring.speaking { animation: ripple 1.2s infinite; }
   @keyframes ripple {
-    0%   { box-shadow: 0 0 0 0px rgba(99,102,241,0.4), 0 0 0 8px rgba(99,102,241,0.2), 0 0 0 16px rgba(99,102,241,0.08); }
-    100% { box-shadow: 0 0 0 8px rgba(99,102,241,0.2), 0 0 0 18px rgba(99,102,241,0.08), 0 0 0 28px rgba(99,102,241,0); }
+    0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.5), 0 0 0 8px rgba(99,102,241,0.2); }
+    100% { box-shadow: 0 0 0 14px rgba(99,102,241,0.1), 0 0 0 26px rgba(99,102,241,0); }
   }
+  .teacher-name { font-size: 1.1rem; font-weight: 700; }
+  .teacher-status { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 6px; }
+  .sdot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+  .sdot.thinking { background: #f59e0b; animation: blink .8s infinite; }
+  .sdot.speaking  { background: #6366f1; animation: blink .5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
-  .teacher-name { font-size: 1.2rem; font-weight: 700; color: #e2e8f0; }
-  .teacher-status {
-    font-size: 0.82rem; color: #64748b;
-    display: flex; align-items: center; gap: 6px;
-    min-height: 20px;
-  }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
-  .status-dot.thinking { background: #f59e0b; animation: blink 0.8s infinite; }
-  .status-dot.speaking-dot { background: #6366f1; animation: blink 0.6s infinite; }
-  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-
-  /* ── Transcript bubble ── */
-  .transcript-area {
+  /* ── Chat bubbles ── */
+  .chat-area {
     width: 100%; max-width: 500px;
-    min-height: 80px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 16px 20px;
-    margin-bottom: 28px;
-    font-size: 0.92rem;
-    line-height: 1.65;
-    color: #cbd5e1;
+    display: flex; flex-direction: column; gap: 12px;
+    margin-bottom: 24px;
+    max-height: 360px; overflow-y: auto;
+    padding-right: 4px;
+  }
+  .chat-area::-webkit-scrollbar { width: 3px; }
+  .chat-area::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+  .bubble-wrap { display: flex; flex-direction: column; animation: fadeUp .3s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  .bubble-wrap.user { align-items: flex-end; }
+  .bubble-wrap.ai   { align-items: flex-start; }
+
+  .bubble {
+    max-width: 85%; padding: 11px 15px;
+    border-radius: 18px; font-size: 0.88rem; line-height: 1.65;
     white-space: pre-wrap;
-    text-align: center;
-    transition: all 0.3s;
   }
-  .transcript-area.ai-bubble {
-    border-color: rgba(99,102,241,0.3);
-    background: rgba(99,102,241,0.07);
-    color: #e2e8f0;
+  .bubble-wrap.user .bubble {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-bottom-right-radius: 4px;
   }
-  .transcript-area .placeholder { color: #334155; font-style: italic; }
-
-  /* ── Mic button ── */
-  .mic-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 32px;
+  .bubble-wrap.ai .bubble {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-bottom-left-radius: 4px;
   }
 
+  /* Japanese card below AI bubble */
+  .ja-card {
+    max-width: 85%; margin-top: 4px;
+    background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 14px; padding: 10px 14px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .ja-card .jt   { font-size: 1.1rem; color: #e2e8f0; }
+  .ja-card .jr   { font-size: 0.75rem; color: #818cf8; }
+  .ja-card .jm   { font-size: 0.75rem; color: #64748b; }
+  .ja-card .jbtn {
+    margin-top: 6px; align-self: flex-start;
+    padding: 3px 10px; border-radius: 8px;
+    border: 1px solid rgba(99,102,241,0.4); background: transparent;
+    color: #818cf8; font-size: 0.72rem; cursor: pointer; transition: background .2s;
+  }
+  .ja-card .jbtn:hover { background: rgba(99,102,241,0.2); }
+
+  .typing-bubble {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 18px; border-bottom-left-radius: 4px;
+    padding: 14px 18px; display: flex; gap: 5px; align-items: center;
+  }
+  .typing-bubble span {
+    width: 7px; height: 7px; border-radius: 50%; background: #818cf8;
+    animation: bounce 1.2s infinite;
+  }
+  .typing-bubble span:nth-child(2) { animation-delay: .2s; }
+  .typing-bubble span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-7px);} }
+
+  .empty-hint { color: #2d3748; font-size: 0.82rem; text-align: center; padding: 30px 0; font-style: italic; }
+
+  /* ── Mic ── */
+  .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 14px; }
   .mic-btn {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    border: none;
+    width: 76px; height: 76px; border-radius: 50%; border: none;
     background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: #fff;
-    font-size: 2rem;
-    cursor: pointer;
+    color: #fff; font-size: 1.9rem; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 4px 24px rgba(239,68,68,0.4);
-    position: relative;
+    box-shadow: 0 4px 20px rgba(239,68,68,.45); transition: all .2s;
   }
-  .mic-btn:hover { transform: scale(1.06); }
-  .mic-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .mic-btn:hover:not(:disabled) { transform: scale(1.07); }
+  .mic-btn:disabled { opacity: .35; cursor: not-allowed; }
   .mic-btn.recording {
     background: linear-gradient(135deg, #22c55e, #16a34a);
-    box-shadow: 0 4px 24px rgba(34,197,94,0.5);
-    animation: mic-pulse 1s infinite;
+    box-shadow: 0 4px 20px rgba(34,197,94,.5);
+    animation: mpulse 1s infinite;
   }
-  @keyframes mic-pulse {
-    0%,100%{ transform: scale(1); }
-    50%{ transform: scale(1.08); }
-  }
+  @keyframes mpulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+  .mic-hint { font-size: 0.75rem; color: #475569; }
+  .live-text { font-size: 0.8rem; color: #64748b; font-style: italic; min-height: 18px; }
 
-  .mic-hint { font-size: 0.78rem; color: #475569; }
-
-  /* ── Mode selector ── */
-  .mode-row {
-    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
-    margin-bottom: 20px;
+  /* ── Text input fallback ── */
+  .text-row { width: 100%; max-width: 500px; display: flex; gap: 8px; }
+  .text-row input {
+    flex: 1; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+    padding: 10px 14px; color: #fff; font-size: 0.85rem; outline: none;
   }
-  .mode-btn {
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: transparent; color: #64748b;
-    font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+  .text-row input:focus { border-color: #6366f1; }
+  .text-row input::placeholder { color: #334155; }
+  .send-btn {
+    padding: 10px 18px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: opacity .2s; white-space: nowrap;
   }
-  .mode-btn.active { background: rgba(99,102,241,0.25); border-color: #6366f1; color: #a5b4fc; }
-
-  /* ── History ── */
-  .history-toggle {
-    font-size: 0.75rem; color: #475569; cursor: pointer;
-    text-decoration: underline; text-underline-offset: 3px;
-    margin-bottom: 8px;
-  }
-  .history-box {
-    display: none;
-    width: 100%; max-width: 500px;
-    max-height: 220px;
-    overflow-y: auto;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 12px;
-    gap: 10px;
-    flex-direction: column;
-  }
-  .history-box.open { display: flex; }
-  .history-box::-webkit-scrollbar { width: 3px; }
-  .history-box::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
-  .h-msg { font-size: 0.8rem; line-height: 1.5; }
-  .h-msg.user { color: #818cf8; text-align: right; }
-  .h-msg.ai   { color: #94a3b8; }
-  .h-label { font-size: 0.65rem; color: #334155; margin-bottom: 2px; }
+  .send-btn:hover { opacity: .85; }
+  .send-btn:disabled { opacity: .35; cursor: not-allowed; }
 </style>
 </head>
 <body>
 
-<!-- Teacher -->
-<div class="teacher-area">
-  <div class="avatar-ring" id="avatarRing">👩‍🏫</div>
-  <div class="teacher-name">Sensei Yuki</div>
-  <div class="teacher-status">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">Sẵn sàng dạy bạn!</span>
+<!-- Settings -->
+<div class="settings">
+  <div class="setting-group">
+    <label>📊 Trình độ</label>
+    <select id="levelSelect" onchange="onSettingChange()">
+      <option value="beginner">Mới bắt đầu</option>
+      <option value="elementary">Sơ cấp (N5-N4)</option>
+      <option value="intermediate">Trung cấp (N3-N4)</option>
+      <option value="advanced">Nâng cao (N1-N2)</option>
+    </select>
+  </div>
+  <div class="setting-group">
+    <label>🎙 Giọng Sensei</label>
+    <select id="voiceSelect">
+      <option value="female">Nữ (Yuki)</option>
+      <option value="male">Nam (Kenji)</option>
+    </select>
+  </div>
+  <div class="setting-group">
+    <label>🗣 Ngôn ngữ nói của bạn</label>
+    <select id="srLangSelect">
+      <option value="vi-VN">Tiếng Việt</option>
+      <option value="ja-JP">Tiếng Nhật</option>
+    </select>
   </div>
 </div>
 
-<!-- Mode -->
-<div class="mode-row">
-  <button class="mode-btn active" onclick="setMode('conversation',this)">💬 Hội thoại</button>
-  <button class="mode-btn" onclick="setMode('grammar',this)">📚 Ngữ pháp</button>
-  <button class="mode-btn" onclick="setMode('vocab',this)">📝 Từ vựng</button>
-  <button class="mode-btn" onclick="setMode('translate',this)">🔄 Dịch thuật</button>
+<!-- Teacher -->
+<div class="teacher-area">
+  <div class="avatar-ring" id="avatarRing">👩‍🏫</div>
+  <div class="teacher-name" id="teacherName">Sensei Yuki</div>
+  <div class="teacher-status">
+    <div class="sdot" id="sdot"></div>
+    <span id="statusText">Sẵn sàng!</span>
+  </div>
 </div>
 
-<!-- Transcript -->
-<div class="transcript-area" id="transcript">
-  <span class="placeholder">Nhấn mic và nói với Sensei Yuki...</span>
+<!-- Chat -->
+<div class="chat-area" id="chatArea">
+  <div class="empty-hint" id="emptyHint">Nhấn mic hoặc gõ để bắt đầu học với Sensei...</div>
 </div>
 
 <!-- Mic -->
 <div class="mic-wrap">
   <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
   <span class="mic-hint" id="micHint">Nhấn để nói</span>
+  <div class="live-text" id="liveText"></div>
 </div>
 
-<!-- History -->
-<span class="history-toggle" onclick="toggleHistory()">📜 Xem lịch sử hội thoại</span>
-<div class="history-box" id="historyBox"></div>
+<!-- Text input fallback -->
+<div class="text-row">
+  <input type="text" id="textInput" placeholder="Hoặc gõ câu hỏi ở đây..." onkeydown="if(event.key==='Enter')sendText()" />
+  <button class="send-btn" id="sendBtn" onclick="sendText()">Gửi</button>
+</div>
 
 <script>
-const API_URL = "https://mistral-backend-vzcs.onrender.com"; // ← thay URL backend vào đây
+const API_URL = "https://mistral-backend-vzcs.onrender.com"; // ← thay URL backend
 
-const SYSTEM_PROMPTS = {
-  conversation: `Bạn là Sensei Yuki, giáo viên tiếng Nhật thân thiện và vui vẻ cho người Việt Nam.
-Hãy nói chuyện tự nhiên như đang dạy học trực tiếp.
-- Trả lời bằng TIẾNG VIỆT, ngắn gọn (2-4 câu), tự nhiên như thầy cô nói chuyện
-- Khi dùng tiếng Nhật: kèm romaji và nghĩa Việt ngay sau
-- Khuyến khích, khen ngợi học sinh
-- Đặt câu hỏi lại để luyện tập nếu phù hợp`,
-
-  grammar: `Bạn là Sensei Yuki, giáo viên ngữ pháp tiếng Nhật cho người Việt.
-- Giải thích ngữ pháp bằng tiếng Việt, ngắn gọn dễ hiểu
-- Luôn cho ví dụ thực tế kèm romaji
-- Nói như đang giảng bài trực tiếp, thân thiện`,
-
-  vocab: `Bạn là Sensei Yuki, dạy từ vựng tiếng Nhật cho người Việt.
-- Giới thiệu từ: Kanji – Romaji – Nghĩa Việt
-- Dùng từ đó trong câu đơn giản
-- Nói ngắn gọn, vui vẻ như đang trò chuyện`,
-
-  translate: `Bạn là Sensei Yuki, phiên dịch Nhật–Việt.
-- Dịch chính xác, giải thích ngắn gọn
-- Chỉ ra sắc thái lịch sự nếu có
-- Trả lời tự nhiên như giáo viên nói chuyện`
-};
-
-let mode = "conversation";
 let history = [];
+let isBusy  = false;
 let isRecording = false;
 let recognition = null;
-let isBusy = false;
+let lastTtsText = "";
 
-function setMode(m, btn) {
-  mode = m;
-  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+// ── Settings ──────────────────────────────────────────────────────────────────
+function onSettingChange() {
+  const voice = document.getElementById("voiceSelect").value;
+  document.getElementById("teacherName").textContent = voice === "female" ? "Sensei Yuki" : "Sensei Kenji";
+  document.getElementById("avatarRing").textContent  = voice === "female" ? "👩‍🏫" : "👨‍🏫";
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────────────
-function showTranscript(text, isAI = false) {
-  const el = document.getElementById("transcript");
-  el.textContent = text;
-  el.className = "transcript-area" + (isAI ? " ai-bubble" : "");
-}
-
+// ── Status ────────────────────────────────────────────────────────────────────
 function setStatus(text, state = "idle") {
   document.getElementById("statusText").textContent = text;
-  const dot = document.getElementById("statusDot");
-  dot.className = "status-dot" + (state === "thinking" ? " thinking" : state === "speaking" ? " speaking-dot" : "");
-  const ring = document.getElementById("avatarRing");
-  ring.className = "avatar-ring" + (state === "speaking" ? " speaking" : "");
+  const dot  = document.getElementById("sdot");
+  dot.className = "sdot" + (state === "thinking" ? " thinking" : state === "speaking" ? " speaking" : "");
+  document.getElementById("avatarRing").className =
+    "avatar-ring" + (state === "speaking" ? " speaking" : "");
 }
 
-function setBusy(val) {
-  isBusy = val;
-  document.getElementById("micBtn").disabled = val;
+function setBusy(v) {
+  isBusy = v;
+  document.getElementById("micBtn").disabled  = v;
+  document.getElementById("sendBtn").disabled = v;
 }
 
-// ── History ───────────────────────────────────────────────────────────────────
-function pushHistory(role, text) {
-  const box = document.getElementById("historyBox");
+// ── Chat UI ───────────────────────────────────────────────────────────────────
+function addUserBubble(text) {
+  document.getElementById("emptyHint")?.remove();
+  const chat = document.getElementById("chatArea");
   const wrap = document.createElement("div");
-  const label = document.createElement("div");
-  label.className = "h-label";
-  label.textContent = role === "user" ? "Bạn" : "Sensei Yuki";
-  const msg = document.createElement("div");
-  msg.className = `h-msg ${role}`;
-  msg.textContent = text;
-  wrap.appendChild(label);
-  wrap.appendChild(msg);
-  box.appendChild(wrap);
-  box.scrollTop = box.scrollHeight;
+  wrap.className = "bubble-wrap user";
+  const b = document.createElement("div");
+  b.className = "bubble";
+  b.textContent = text;
+  wrap.appendChild(b);
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-function toggleHistory() {
-  document.getElementById("historyBox").classList.toggle("open");
+function addTyping() {
+  document.getElementById("emptyHint")?.remove();
+  const chat = document.getElementById("chatArea");
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-wrap ai";
+  wrap.id = "typingWrap";
+  const t = document.createElement("div");
+  t.className = "typing-bubble";
+  t.innerHTML = "<span></span><span></span><span></span>";
+  wrap.appendChild(t);
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-// ── Send to AI ─────────────────────────────────────────────────────────────────
+function removeTyping() { document.getElementById("typingWrap")?.remove(); }
+
+function addAIBubble(data) {
+  const chat = document.getElementById("chatArea");
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-wrap ai";
+
+  // Main reply bubble
+  const b = document.createElement("div");
+  b.className = "bubble";
+  b.textContent = data.reply_text || "";
+  wrap.appendChild(b);
+
+  // Japanese card (if tts_text exists)
+  if (data.tts_text) {
+    const card = document.createElement("div");
+    card.className = "ja-card";
+    card.innerHTML = `
+      <div class="jt">${data.tts_text}</div>
+      ${data.romaji    ? `<div class="jr">📖 ${data.romaji}</div>` : ""}
+      ${data.translation ? `<div class="jm">🇻🇳 ${data.translation}</div>` : ""}
+      <button class="jbtn" onclick="replayTTS()">🔊 Nghe lại</button>
+    `;
+    wrap.appendChild(card);
+  }
+
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ── TTS (Web Speech API - ja-JP, free) ───────────────────────────────────────
+function playTTS(text) {
+  return new Promise((resolve) => {
+    if (!text) { setBusy(false); setStatus("Sẵn sàng!", "idle"); resolve(); return; }
+    lastTtsText = text;
+
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    u.rate = 0.9;
+    u.pitch = document.getElementById("voiceSelect").value === "female" ? 1.2 : 0.8;
+
+    // Pick best available Japanese voice
+    const voices = speechSynthesis.getVoices();
+    const jaVoice = voices.find(v => v.lang === "ja-JP" && v.localService)
+                 || voices.find(v => v.lang === "ja-JP")
+                 || voices.find(v => v.lang.startsWith("ja"));
+    if (jaVoice) u.voice = jaVoice;
+
+    setStatus("Sensei đang nói...", "speaking");
+
+    u.onend = () => {
+      setStatus("Sẵn sàng!", "idle");
+      setBusy(false);
+      document.getElementById("micHint").textContent = "Nhấn để trả lời";
+      resolve();
+    };
+    u.onerror = () => { setStatus("Sẵn sàng!", "idle"); setBusy(false); resolve(); };
+
+    speechSynthesis.speak(u);
+  });
+}
+
+function replayTTS() { if (lastTtsText) playTTS(lastTtsText); }
+
+// ── Ask AI ────────────────────────────────────────────────────────────────────
 async function askAI(userText) {
   history.push({ role: "user", content: userText });
-  pushHistory("user", userText);
-
   setBusy(true);
+  addTyping();
   setStatus("Sensei đang suy nghĩ...", "thinking");
+
+  const level = document.getElementById("levelSelect").value;
 
   try {
     const res = await fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode, history })
+      body: JSON.stringify({ history, level })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-    const reply = data.reply;
-    history.push({ role: "assistant", content: reply });
-    pushHistory("ai", reply);
+    removeTyping();
+    history.push({ role: "assistant", content: JSON.stringify(data) });
+    addAIBubble(data);
+    await playTTS(data.tts_text);
 
-    showTranscript(reply, true);
-    speakReply(reply);
   } catch (e) {
-    setStatus("Lỗi kết nối 😢", "idle");
-    showTranscript(`❌ ${e.message}`);
+    removeTyping();
+    addAIBubble({ reply_text: `❌ ${e.message}`, tts_text: "" });
+    setStatus("Lỗi kết nối", "idle");
     setBusy(false);
   }
 }
 
-// ── TTS ────────────────────────────────────────────────────────────────────────
-function speakReply(text) {
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const voices = speechSynthesis.getVoices();
-  const vi = voices.find(v => v.lang.startsWith("vi"));
-  if (vi) u.voice = vi;
-  u.lang = "vi-VN";
-  u.rate = 0.9;
-
-  setStatus("Sensei đang nói...", "speaking");
-
-  u.onend = () => {
-    setStatus("Sẵn sàng dạy bạn!", "idle");
-    setBusy(false);
-    document.getElementById("micHint").textContent = "Nhấn để trả lời";
-  };
-
-  u.onerror = () => {
-    setStatus("Sẵn sàng dạy bạn!", "idle");
-    setBusy(false);
-  };
-
-  speechSynthesis.speak(u);
+function sendText() {
+  const input = document.getElementById("textInput");
+  const text  = input.value.trim();
+  if (!text || isBusy) return;
+  input.value = "";
+  addUserBubble(text);
+  askAI(text);
 }
 
-// ── Speech Recognition ─────────────────────────────────────────────────────────
+// ── Speech Recognition ────────────────────────────────────────────────────────
 function toggleMic() {
   if (isBusy) return;
   isRecording ? stopMic() : startMic();
@@ -336,8 +386,9 @@ function startMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { setStatus("Trình duyệt không hỗ trợ mic!", "idle"); return; }
 
+  const lang = document.getElementById("srLangSelect").value;
   recognition = new SR();
-  recognition.lang = "vi-VN";
+  recognition.lang = lang;
   recognition.interimResults = true;
   recognition.continuous = false;
 
@@ -346,14 +397,13 @@ function startMic() {
     document.getElementById("micBtn").classList.add("recording");
     document.getElementById("micBtn").textContent = "⏹";
     document.getElementById("micHint").textContent = "Đang nghe... nhấn để dừng";
-    setStatus("Đang nghe bạn...", "idle");
-    showTranscript("🎙️ ...");
+    setStatus("Đang nghe...", "idle");
   };
 
   recognition.onresult = (e) => {
     let t = "";
     for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
-    showTranscript("🗣️ " + t);
+    document.getElementById("liveText").textContent = t;
   };
 
   recognition.onend = () => {
@@ -361,15 +411,10 @@ function startMic() {
     document.getElementById("micBtn").classList.remove("recording");
     document.getElementById("micBtn").textContent = "🎤";
     document.getElementById("micHint").textContent = "Nhấn để nói";
-
-    const text = document.getElementById("transcript").textContent.replace("🗣️ ", "").trim();
-    if (text && text !== "🎙️ ...") {
-      askAI(text);
-    } else {
-      setStatus("Sẵn sàng dạy bạn!", "idle");
-      showTranscript("", false);
-      document.getElementById("transcript").innerHTML = `<span class="placeholder">Nhấn mic và nói với Sensei Yuki...</span>`;
-    }
+    const t = document.getElementById("liveText").textContent.trim();
+    document.getElementById("liveText").textContent = "";
+    if (t) { addUserBubble(t); askAI(t); }
+    else setStatus("Sẵn sàng!", "idle");
   };
 
   recognition.onerror = (e) => {
@@ -382,14 +427,15 @@ function startMic() {
 
 function stopMic() {
   recognition?.stop();
+  isRecording = false;
+  document.getElementById("micBtn").classList.remove("recording");
+  document.getElementById("micBtn").textContent = "🎤";
 }
 
-// ── Init ────────────────────────────────────────────────────────────────────────
-speechSynthesis.onvoiceschanged = () => {};
-
+// ── Init ──────────────────────────────────────────────────────────────────────
 fetch(`${API_URL}/health`)
   .then(r => r.json())
-  .then(() => setStatus("Sẵn sàng dạy bạn!", "idle"))
+  .then(() => setStatus("Sẵn sàng!", "idle"))
   .catch(() => setStatus("⚠️ Không kết nối được backend", "idle"));
 </script>
 </body>
