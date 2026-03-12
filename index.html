@@ -213,7 +213,7 @@
 </div>
 
 <script>
-const API_URL = "https://mistral-backend-vzcs.onrender.com"; // ← thay URL backend
+const API_URL = "https://YOUR-BACKEND.onrender.com"; // ← thay URL backend
 
 let history = [];
 let isBusy  = false;
@@ -301,37 +301,45 @@ function addAIBubble(data) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// ── TTS (Web Speech API - ja-JP, free) ───────────────────────────────────────
-function playTTS(text) {
-  return new Promise((resolve) => {
-    if (!text) { setBusy(false); setStatus("Sẵn sàng!", "idle"); resolve(); return; }
-    lastTtsText = text;
+// ── TTS (ElevenLabs) ─────────────────────────────────────────────────────────
+async function playTTS(text) {
+  if (!text) { setBusy(false); setStatus("Sẵn sàng!", "idle"); return; }
+  lastTtsText = text;
+  setStatus("Sensei đang nói...", "speaking");
 
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP";
-    u.rate = 0.9;
-    u.pitch = document.getElementById("voiceSelect").value === "female" ? 1.2 : 0.8;
+  try {
+    const res = await fetch(`${API_URL}/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
 
-    // Pick best available Japanese voice
-    const voices = speechSynthesis.getVoices();
-    const jaVoice = voices.find(v => v.lang === "ja-JP" && v.localService)
-                 || voices.find(v => v.lang === "ja-JP")
-                 || voices.find(v => v.lang.startsWith("ja"));
-    if (jaVoice) u.voice = jaVoice;
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
 
-    setStatus("Sensei đang nói...", "speaking");
+    const blob  = await res.blob();
+    const url   = URL.createObjectURL(blob);
+    const audio = new Audio(url);
 
-    u.onend = () => {
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
       setStatus("Sẵn sàng!", "idle");
       setBusy(false);
       document.getElementById("micHint").textContent = "Nhấn để trả lời";
-      resolve();
     };
-    u.onerror = () => { setStatus("Sẵn sàng!", "idle"); setBusy(false); resolve(); };
+    audio.onerror = () => {
+      setStatus("Sẵn sàng!", "idle");
+      setBusy(false);
+    };
 
-    speechSynthesis.speak(u);
-  });
+    audio.play();
+
+  } catch (e) {
+    setStatus(`TTS lỗi: ${e.message}`, "idle");
+    setBusy(false);
+  }
 }
 
 function replayTTS() { if (lastTtsText) playTTS(lastTtsText); }
