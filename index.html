@@ -483,30 +483,39 @@ function makeInteractive(el, romaji, translation) {
   _interactiveMap.set(el, { romaji, translation });
 }
 
-function _checkSelection() {
-  const sel  = window.getSelection();
-  const text = sel?.toString().trim();
-  if (!text || !sel.rangeCount) return;
-  const node = sel.getRangeAt(0).commonAncestorContainer;
-  const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
-  if (!el) return;
-  const { romaji, translation } = _interactiveMap.get(el) || {};
-  showFloatBar(text, romaji||"", translation||"", sel.getRangeAt(0).getBoundingClientRect());
-}
-
-// touchend: wait 150ms so selectionchange settles first (iOS fires selectionchange before touchend)
-document.addEventListener("touchend", (e) => {
+let _touching = false;
+document.addEventListener("touchstart", () => { _touching = true; hideFloatBar(); });
+document.addEventListener("touchend",   (e) => {
   if (_floatBarEl?.contains(e.target)) return;
-  setTimeout(_checkSelection, 150);
+  _touching = false;
+  setTimeout(() => {
+    if (_touching) return; // another finger still on screen
+    const sel  = window.getSelection();
+    const text = sel?.toString().trim();
+    if (!text || !sel.rangeCount) return;
+    const node = sel.getRangeAt(0).commonAncestorContainer;
+    const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
+    if (!el) return;
+    const { romaji, translation } = _interactiveMap.get(el) || {};
+    showFloatBar(text, romaji||"", translation||"", sel.getRangeAt(0).getBoundingClientRect());
+  }, 100);
 });
 
-// mouseup: shorter delay fine on desktop
+// Desktop
 document.addEventListener("mouseup", (e) => {
   if (_floatBarEl?.contains(e.target)) return;
-  setTimeout(_checkSelection, 20);
+  setTimeout(() => {
+    const sel  = window.getSelection();
+    const text = sel?.toString().trim();
+    if (!text || !sel.rangeCount) return;
+    const node = sel.getRangeAt(0).commonAncestorContainer;
+    const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
+    if (!el) return;
+    const { romaji, translation } = _interactiveMap.get(el) || {};
+    showFloatBar(text, romaji||"", translation||"", sel.getRangeAt(0).getBoundingClientRect());
+  }, 20);
 });
 
-// Hide when selection cleared
 document.addEventListener("selectionchange", () => {
   if (!window.getSelection()?.toString().trim()) hideFloatBar();
 });
