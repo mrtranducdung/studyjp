@@ -809,29 +809,40 @@ function deleteItem(type, id) {
   saveLib(lib); renderLibrary();
 }
 function openLibrary(tab) {
-  libTab = tab||libTab;
+  libTab = tab || libTab;
   document.querySelector(".lib-overlay")?.remove();
   const ov = document.createElement("div");
   ov.className = "lib-overlay";
   const lib = loadLib();
+  const sh = loadShadowing();
   ov.innerHTML = `
     <div class="lib-modal">
       <div class="lib-header">
         <h3>${t("libTitle")}</h3>
-        <button class="lib-close" onclick="this.closest('.lib-overlay').remove()">✕</button>
+        <button class="lib-close" onclick="stopShadowPlay();this.closest('.lib-overlay').remove()">✕</button>
       </div>
       <div class="lib-tabs">
         <button class="lib-tab ${libTab==="sentence"?"active":""}" onclick="switchLibTab('sentence',event)">${t("libTabSentence")} (${lib.sentences.length})</button>
         <button class="lib-tab ${libTab==="word"?"active":""}"     onclick="switchLibTab('word',event)">${t("libTabWord")} (${lib.words.length})</button>
+        <button class="lib-tab ${libTab==="shadowing"?"active":""}" onclick="switchLibTab('shadowing',event)">${t("shadowBtn")} (${sh.length})</button>
+      </div>
+      <div id="shadowPlayer" style="display:none;">
+        <div class="shadow-player">
+          <button class="shadow-play-btn" id="shadowPlayBtn" onclick="toggleShadowPlay()">${t("shadowPlay")}</button>
+          <span class="shadow-counter" id="shadowCounter"></span>
+          <span style="font-size:0.75rem;color:#475569;" id="shadowStatus"></span>
+        </div>
+        <div class="shadow-bar"><div class="shadow-bar-fill" id="shadowBarFill" style="width:0%"></div></div>
       </div>
       <div class="lib-list" id="libList"></div>
     </div>
   `;
-  ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+  ov.addEventListener("click", e=>{ if(e.target===ov){ stopShadowPlay(); ov.remove(); } });
   document.body.appendChild(ov);
   renderLibrary();
 }
 function switchLibTab(tab, e) {
+  if (libTab === "shadowing" && tab !== "shadowing") stopShadowPlay();
   libTab = tab;
   document.querySelectorAll(".lib-tab").forEach(b=>b.classList.remove("active"));
   e.target.classList.add("active");
@@ -839,10 +850,16 @@ function switchLibTab(tab, e) {
   const lib = loadLib();
   document.querySelectorAll(".lib-tab")[0].textContent = `${t("libTabSentence")} (${lib.sentences.length})`;
   document.querySelectorAll(".lib-tab")[1].textContent = `${t("libTabWord")} (${lib.words.length})`;
+  document.querySelectorAll(".lib-tab")[2].textContent = `${t("shadowBtn")} (${loadShadowing().length})`;
 }
 async function renderLibrary() {
   const list = document.getElementById("libList");
   if (!list) return;
+  const player = document.getElementById("shadowPlayer");
+  if (player) player.style.display = libTab==="shadowing" ? "" : "none";
+
+  if (libTab === "shadowing") { renderShadowing(); return; }
+
   const items = libTab==="sentence" ? loadLib().sentences : loadLib().words;
   if (!items.length) { list.innerHTML=`<div class="lib-empty">${libTab==="sentence"?t("libEmptySentence"):t("libEmptyWord")}</div>`; return; }
   list.innerHTML = items.map((i, idx) => {
@@ -919,53 +936,40 @@ function addToShadowing(sentenceId) {
   if (list.find(i=>i.id===sentenceId)) { showToast(t("shadowExists")); return; }
   list.push({ id:item.id, text:item.text, extra:item.extra||"" });
   saveShadowing(list);
-  showToast(t("shadowAdded"));
-  renderShadowing();
+  showToast(t("shadowAdded"), null, null);
+  const tab2 = document.querySelectorAll(".lib-tab")[2];
+  if (tab2) tab2.textContent = `${t("shadowBtn")} (${list.length})`;
 }
 
 function removeShadowing(id) {
   saveShadowing(loadShadowing().filter(i=>i.id!==id));
   renderShadowing();
+  const tab2 = document.querySelectorAll(".lib-tab")[2];
+  if (tab2) tab2.textContent = `${t("shadowBtn")} (${loadShadowing().length})`;
 }
 
-function openShadowing() {
-  document.querySelector(".shadow-overlay")?.remove();
-  const ov = document.createElement("div");
-  ov.className = "lib-overlay shadow-overlay";
-  ov.innerHTML = `
-    <div class="lib-modal" style="max-width:500px;">
-      <div class="lib-header">
-        <h3>${t("shadowTitle")}</h3>
-        <button class="lib-close" onclick="stopShadowPlay();this.closest('.shadow-overlay').remove()">✕</button>
-      </div>
-      <div class="shadow-player">
-        <button class="shadow-play-btn" id="shadowPlayBtn" onclick="toggleShadowPlay()">${t("shadowPlay")}</button>
-        <span class="shadow-counter" id="shadowCounter"></span>
-        <span style="font-size:0.75rem;color:#475569;" id="shadowStatus"></span>
-      </div>
-      <div class="shadow-bar"><div class="shadow-bar-fill" id="shadowBarFill" style="width:0%"></div></div>
-      <div class="lib-list" id="shadowList"></div>
-    </div>
-  `;
-  ov.addEventListener("click", e=>{ if(e.target===ov){ stopShadowPlay(); ov.remove(); } });
-  document.body.appendChild(ov);
-  renderShadowing();
-}
+function openShadowing() { openLibrary("shadowing"); }
 
 function renderShadowing() {
-  const list = document.getElementById("shadowList");
+  const list = document.getElementById("libList");
   if (!list) return;
   const items = loadShadowing();
   if (!items.length) { list.innerHTML=`<div class="lib-empty">${t("shadowEmpty")}</div>`; return; }
-  list.innerHTML = items.map((item, idx) => `
+  list.innerHTML = items.map((item, idx) => {
+    const safeText = item.text.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    return `
     <div class="lib-item shadow-item" id="shadowitem_${item.id}">
       <div style="font-size:0.7rem;color:#334155;font-weight:700;min-width:22px;padding-top:2px;">${idx+1}.</div>
       <div style="flex:1">
         <div class="li-text">${item.text}</div>
         ${item.extra?`<div class="li-meta">📖 ${item.extra}</div>`:""}
       </div>
-      <button class="li-del" onclick="removeShadowing('${item.id}')" title="Remove">🗑</button>
-    </div>`).join("");
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
+        <button class="li-del" style="color:#818cf8;" onclick="playLibTTS('${safeText}')" title="TTS">🔊</button>
+        <button class="li-del" onclick="removeShadowing('${item.id}')" title="Remove">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 function toggleShadowPlay() {
