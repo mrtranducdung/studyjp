@@ -531,24 +531,24 @@ function showFloatBar(text, romaji, translation, rect) {
   document.body.appendChild(bar);
   _floatBarEl = bar;
 
-  // Position near selection — above by default, below if near top
-  const barW = bar.offsetWidth  || 220;
-  const barH = bar.offsetHeight || 44;
-  const GAP  = 10;
-  const spaceAbove = rect ? rect.top : 0;
-  const above = spaceAbove > barH + GAP;
+  // On mobile: native menu is above selection → put bar BELOW
+  // On desktop: no native menu → put bar ABOVE (nicer UX)
+  const barW    = bar.offsetWidth  || 220;
+  const barH    = bar.offsetHeight || 44;
+  const GAP     = 12;
+  const isMobile = window.matchMedia("(pointer:coarse)").matches;
 
-  let top, left;
+  let top, left, above;
   if (rect) {
-    left = Math.max(8, Math.min(rect.left + rect.width / 2 - barW / 2, window.innerWidth - barW - 8));
-    top  = above
-      ? rect.top  - barH - GAP
-      : rect.bottom + GAP;
-    if (!above) bar.classList.add("arrow-up");
+    left  = Math.max(8, Math.min(rect.left + rect.width / 2 - barW / 2, window.innerWidth - barW - 8));
+    above = !isMobile && rect.top > barH + GAP;
+    top   = above ? rect.top - barH - GAP : rect.bottom + GAP;
   } else {
-    left = window.innerWidth  / 2 - barW / 2;
-    top  = window.innerHeight - barH - 90;
+    left  = window.innerWidth / 2 - barW / 2;
+    top   = window.innerHeight - barH - 90;
+    above = false;
   }
+  if (!above) bar.classList.add("arrow-up");
   bar.style.left = left + "px";
   bar.style.top  = top  + "px";
 }
