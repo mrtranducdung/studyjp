@@ -483,27 +483,26 @@ function makeInteractive(el, romaji, translation) {
   _interactiveMap.set(el, { romaji, translation });
 }
 
-// _lifted = true right after finger/mouse lifts, reset after bar is shown
-let _lifted = false;
-document.addEventListener("touchend", () => { _lifted = true; });
-document.addEventListener("mouseup",  () => { _lifted = true; });
+// Timestamp of last finger/mouse lift — selectionchange checks if it's recent
+let _liftedAt = 0;
+document.addEventListener("touchend", () => { _liftedAt = Date.now(); });
+document.addEventListener("mouseup",  () => { _liftedAt = Date.now(); });
 
 document.addEventListener("selectionchange", () => {
   const sel  = window.getSelection();
   const text = sel?.toString().trim();
 
-  if (!text || !sel.rangeCount) { hideFloatBar(); _lifted = false; return; }
+  if (!text || !sel.rangeCount) { hideFloatBar(); return; }
 
-  // While actively dragging (not yet lifted), keep bar hidden
-  if (!_lifted) { hideFloatBar(); return; }
+  // Only show bar if user just lifted finger/mouse (within 500ms)
+  if (Date.now() - _liftedAt > 500) { hideFloatBar(); return; }
 
   const node = sel.getRangeAt(0).commonAncestorContainer;
   const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
-  if (!el) { hideFloatBar(); _lifted = false; return; }
+  if (!el) { hideFloatBar(); return; }
 
   const { romaji, translation } = _interactiveMap.get(el) || {};
   const rect = sel.getRangeAt(0).getBoundingClientRect();
-  _lifted = false;
   showFloatBar(text, romaji||"", translation||"", rect);
 });
 
