@@ -483,41 +483,27 @@ function makeInteractive(el, romaji, translation) {
   _interactiveMap.set(el, { romaji, translation });
 }
 
-let _touching = false;
-document.addEventListener("touchstart", () => { _touching = true; hideFloatBar(); });
-document.addEventListener("touchend",   (e) => {
-  if (_floatBarEl?.contains(e.target)) return;
-  _touching = false;
-  setTimeout(() => {
-    if (_touching) return; // another finger still on screen
-    const sel  = window.getSelection();
-    const text = sel?.toString().trim();
-    if (!text || !sel.rangeCount) return;
-    const node = sel.getRangeAt(0).commonAncestorContainer;
-    const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
-    if (!el) return;
-    const { romaji, translation } = _interactiveMap.get(el) || {};
-    showFloatBar(text, romaji||"", translation||"", sel.getRangeAt(0).getBoundingClientRect());
-  }, 100);
-});
-
-// Desktop
-document.addEventListener("mouseup", (e) => {
-  if (_floatBarEl?.contains(e.target)) return;
-  setTimeout(() => {
-    const sel  = window.getSelection();
-    const text = sel?.toString().trim();
-    if (!text || !sel.rangeCount) return;
-    const node = sel.getRangeAt(0).commonAncestorContainer;
-    const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
-    if (!el) return;
-    const { romaji, translation } = _interactiveMap.get(el) || {};
-    showFloatBar(text, romaji||"", translation||"", sel.getRangeAt(0).getBoundingClientRect());
-  }, 20);
-});
-
+let _selDebounce = null;
 document.addEventListener("selectionchange", () => {
-  if (!window.getSelection()?.toString().trim()) hideFloatBar();
+  clearTimeout(_selDebounce);
+  hideFloatBar();
+
+  const sel  = window.getSelection();
+  const text = sel?.toString().trim();
+  if (!text || !sel.rangeCount) return;
+
+  const node = sel.getRangeAt(0).commonAncestorContainer;
+  const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
+  if (!el) return;
+
+  const { romaji, translation } = _interactiveMap.get(el) || {};
+  const rect = sel.getRangeAt(0).getBoundingClientRect();
+
+  // Show only after selection is stable — same time native menu appears
+  _selDebounce = setTimeout(() => {
+    const cur = window.getSelection()?.toString().trim();
+    if (cur === text) showFloatBar(text, romaji||"", translation||"", rect);
+  }, 400);
 });
 
 let _floatBarEl = null;
