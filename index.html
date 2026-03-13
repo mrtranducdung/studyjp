@@ -164,6 +164,16 @@
   .lib-item .li-del:hover { color:#f87171; background:rgba(248,113,113,0.1); }
   .lib-empty { color:#334155; font-size:0.82rem; text-align:center; padding:30px 0; font-style:italic; }
 
+  /* ── Shadowing ── */
+  .shadow-item { transition: background .2s, border-color .2s; }
+  .shadow-item.active { background: rgba(99,102,241,0.2) !important; border-color: #818cf8 !important; }
+  .shadow-item.active .li-text { color: #fff; }
+  .shadow-player { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .shadow-play-btn { padding:8px 20px; border-radius:20px; border:none; font-size:0.85rem; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; }
+  .shadow-counter { font-size:0.75rem; color:#64748b; }
+  .shadow-bar { height:3px; background:rgba(99,102,241,0.2); border-radius:2px; margin:0 16px 4px; overflow:hidden; }
+  .shadow-bar-fill { height:100%; background:#6366f1; border-radius:2px; transition:width .1s linear; }
+
   /* ── Toast ── */
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1e1e35; border:1px solid rgba(99,102,241,0.4); border-radius:12px; padding:10px 18px; font-size:0.82rem; color:#e2e8f0; z-index:2000; display:flex; align-items:center; gap:10px; box-shadow:0 4px 20px rgba(0,0,0,0.4); animation:slideUp .25s ease; }
   .toast button { background:none; border:1px solid rgba(99,102,241,0.4); border-radius:8px; color:#a5b4fc; font-size:0.75rem; padding:3px 10px; cursor:pointer; }
@@ -227,14 +237,14 @@
     <select id="srLangSelect">
       <option value="vi-VN" id="optMicVi">Tiếng Việt</option>
       <option value="en-US" id="optMicEn">Tiếng Anh</option>
-      <option value="ja-JP" id="optMicJa">Tiếng Nhật</option>
+      <option value="ja-JP" id="optMicJa" selected>Tiếng Nhật</option>
     </select>
   </div>
   <div class="setting-group">
     <label id="labelLang">🌐 Ngôn ngữ</label>
     <select id="langSelect" onchange="onLangChange()">
       <option value="vi">🇻🇳 Tiếng Việt</option>
-      <option value="en">🇬🇧 English</option>
+      <option value="en" selected>🇬🇧 English</option>
       <option value="ja">🇯🇵 日本語</option>
     </select>
   </div>
@@ -272,6 +282,7 @@
 <!-- Controls -->
 <div class="controls-row">
   <button class="btn-sm" onclick="toggleAnalysis()" id="analysisBtn">🔍 Phân tích: BẬT</button>
+  <button class="btn-sm" onclick="openShadowing()" id="btnShadowing">🎙 Shadowing</button>
   <button class="btn-sm" onclick="location.reload()" id="btnRestart">🔄 Bắt đầu lại</button>
 </div>
 
@@ -299,7 +310,7 @@ const API_URL = "https://mistral-backend-vzcs.onrender.com";
 
 let history = [], isBusy = false, isRecording = false, recognition = null;
 let lastTtsText = "", analysisOn = true, libTab = "sentence";
-let uiLang = "vi";
+let uiLang = "en";
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const STRINGS = {
@@ -319,6 +330,9 @@ const STRINGS = {
     libTitle:"📚 Danh sách học", libTabSentence:"💬 Câu", libTabWord:"📝 Từ",
     libEmptySentence:"Chưa có câu nào", libEmptyWord:"Chưa có từ nào",
     toastSavedSentence:"✅ Đã lưu câu!", toastSavedWord:"✅ Đã lưu từ!", toastExists:"⚠️ Đã có trong danh sách!", toastView:"Xem",
+    shadowBtn:"🎙 Shadowing", shadowTitle:"🎙 Shadowing", shadowPlay:"▶ Phát", shadowStop:"⏹ Dừng",
+    shadowEmpty:"Chưa có câu nào. Thêm từ danh sách câu.", shadowAdded:"✅ Đã thêm vào Shadowing!", shadowExists:"⚠️ Đã có trong Shadowing!",
+    shadowWaiting:"Nhắc lại...", shadowAdd:"🎙",
     setupTitle:"🎌 Chọn ngữ cảnh học hôm nay", setupCustomLabel:"✍️ Hoặc tự nhập ngữ cảnh:",
     setupCustomPlaceholder:"VD: Bạn là bạn cùng lớp người Nhật...", setupStartBtn:"Bắt đầu →",
     roleTitle:"🎭 Chọn vai diễn", roleYou:"🙋 Bạn đóng vai:", roleSensei:"🤖 Sensei đóng vai:",
@@ -361,6 +375,9 @@ const STRINGS = {
     libTitle:"📚 Study List", libTabSentence:"💬 Sentences", libTabWord:"📝 Words",
     libEmptySentence:"No sentences yet", libEmptyWord:"No words yet",
     toastSavedSentence:"✅ Sentence saved!", toastSavedWord:"✅ Word saved!", toastExists:"⚠️ Already in list!", toastView:"View",
+    shadowBtn:"🎙 Shadowing", shadowTitle:"🎙 Shadowing", shadowPlay:"▶ Play", shadowStop:"⏹ Stop",
+    shadowEmpty:"No sentences yet. Add from Study List → Sentences.", shadowAdded:"✅ Added to Shadowing!", shadowExists:"⚠️ Already in Shadowing!",
+    shadowWaiting:"Repeat...", shadowAdd:"🎙",
     setupTitle:"🎌 Choose today's context", setupCustomLabel:"✍️ Or enter custom context:",
     setupCustomPlaceholder:"E.g. You are a Japanese classmate...", setupStartBtn:"Start →",
     roleTitle:"🎭 Choose roles", roleYou:"🙋 You play as:", roleSensei:"🤖 Sensei plays as:",
@@ -403,6 +420,9 @@ const STRINGS = {
     libTitle:"📚 学習リスト", libTabSentence:"💬 文", libTabWord:"📝 単語",
     libEmptySentence:"まだ文がありません", libEmptyWord:"まだ単語がありません",
     toastSavedSentence:"✅ 文を保存しました！", toastSavedWord:"✅ 単語を保存しました！", toastExists:"⚠️ すでにリストにあります！", toastView:"確認",
+    shadowBtn:"🎙 シャドーイング", shadowTitle:"🎙 シャドーイング", shadowPlay:"▶ 再生", shadowStop:"⏹ 停止",
+    shadowEmpty:"まだ文がありません。学習リストから追加してください。", shadowAdded:"✅ シャドーイングに追加！", shadowExists:"⚠️ すでに追加済み！",
+    shadowWaiting:"繰り返して...", shadowAdd:"🎙",
     setupTitle:"🎌 今日の場面を選ぶ", setupCustomLabel:"✍️ または場面を入力：",
     setupCustomPlaceholder:"例：あなたは日本人のクラスメートです...", setupStartBtn:"始める →",
     roleTitle:"🎭 役を選ぶ", roleYou:"🙋 あなたの役：", roleSensei:"🤖 先生の役：",
@@ -438,7 +458,7 @@ function applyLang() {
   const s = STRINGS[uiLang];
   const ids = ["labelLevel","labelVoice","labelMic","labelLang",
     "optBeginner","optElementary","optIntermediate","optAdvanced",
-    "optMicVi","optMicEn","optMicJa","btnLibrary","btnRestart","sendBtn"];
+    "optMicVi","optMicEn","optMicJa","btnLibrary","btnRestart","btnShadowing","sendBtn"];
   for (const id of ids) { const el=document.getElementById(id); if(el) el.textContent=s[id]; }
   document.getElementById("analysisBtn").textContent = analysisOn ? s.btnAnalysisOn : s.btnAnalysisOff;
   document.getElementById("textInput").placeholder = s.inputPlaceholder;
@@ -841,8 +861,9 @@ async function renderLibrary() {
         <div class="li-meta">🕐 ${i.savedAt}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
-        <button class="li-del" style="color:#818cf8;" onclick="playLibTTS('${safeText}')" title="Nghe">🔊</button>
-        <button class="li-del" onclick="deleteItem('${libTab}','${i.id}')" title="Xóa">🗑</button>
+        <button class="li-del" style="color:#818cf8;" onclick="playLibTTS('${safeText}')" title="TTS">🔊</button>
+        ${libTab==="sentence"?`<button class="li-del" style="color:#a78bfa;" onclick="addToShadowing('${i.id}')" title="${t('shadowBtn')}">🎙</button>`:""}
+        <button class="li-del" onclick="deleteItem('${libTab}','${i.id}')" title="Delete">🗑</button>
       </div>
     </div>`;
   }).join("");
@@ -882,6 +903,150 @@ async function playLibTTS(text) {
     audio.onended = () => URL.revokeObjectURL(url);
     audio.play();
   } catch(e) { showToast("❌ TTS lỗi"); }
+}
+
+// ── Shadowing ─────────────────────────────────────────────────────────────────
+let _shadowPlaying = false, _shadowIdx = 0, _shadowPauseTimer = null, _shadowAudio = null;
+
+function loadShadowing() { return JSON.parse(localStorage.getItem("jp_shadowing")||"[]"); }
+function saveShadowing(list) { localStorage.setItem("jp_shadowing", JSON.stringify(list)); }
+
+function addToShadowing(sentenceId) {
+  const lib  = loadLib();
+  const item = lib.sentences.find(i=>i.id===sentenceId);
+  if (!item) return;
+  const list = loadShadowing();
+  if (list.find(i=>i.id===sentenceId)) { showToast(t("shadowExists")); return; }
+  list.push({ id:item.id, text:item.text, extra:item.extra||"" });
+  saveShadowing(list);
+  showToast(t("shadowAdded"));
+  renderShadowing();
+}
+
+function removeShadowing(id) {
+  saveShadowing(loadShadowing().filter(i=>i.id!==id));
+  renderShadowing();
+}
+
+function openShadowing() {
+  document.querySelector(".shadow-overlay")?.remove();
+  const ov = document.createElement("div");
+  ov.className = "lib-overlay shadow-overlay";
+  ov.innerHTML = `
+    <div class="lib-modal" style="max-width:500px;">
+      <div class="lib-header">
+        <h3>${t("shadowTitle")}</h3>
+        <button class="lib-close" onclick="stopShadowPlay();this.closest('.shadow-overlay').remove()">✕</button>
+      </div>
+      <div class="shadow-player">
+        <button class="shadow-play-btn" id="shadowPlayBtn" onclick="toggleShadowPlay()">${t("shadowPlay")}</button>
+        <span class="shadow-counter" id="shadowCounter"></span>
+        <span style="font-size:0.75rem;color:#475569;" id="shadowStatus"></span>
+      </div>
+      <div class="shadow-bar"><div class="shadow-bar-fill" id="shadowBarFill" style="width:0%"></div></div>
+      <div class="lib-list" id="shadowList"></div>
+    </div>
+  `;
+  ov.addEventListener("click", e=>{ if(e.target===ov){ stopShadowPlay(); ov.remove(); } });
+  document.body.appendChild(ov);
+  renderShadowing();
+}
+
+function renderShadowing() {
+  const list = document.getElementById("shadowList");
+  if (!list) return;
+  const items = loadShadowing();
+  if (!items.length) { list.innerHTML=`<div class="lib-empty">${t("shadowEmpty")}</div>`; return; }
+  list.innerHTML = items.map((item, idx) => `
+    <div class="lib-item shadow-item" id="shadowitem_${item.id}">
+      <div style="font-size:0.7rem;color:#334155;font-weight:700;min-width:22px;padding-top:2px;">${idx+1}.</div>
+      <div style="flex:1">
+        <div class="li-text">${item.text}</div>
+        ${item.extra?`<div class="li-meta">📖 ${item.extra}</div>`:""}
+      </div>
+      <button class="li-del" onclick="removeShadowing('${item.id}')" title="Remove">🗑</button>
+    </div>`).join("");
+}
+
+function toggleShadowPlay() {
+  if (_shadowPlaying) stopShadowPlay();
+  else startShadowPlay();
+}
+
+function stopShadowPlay() {
+  _shadowPlaying = false;
+  clearTimeout(_shadowPauseTimer);
+  _shadowAudio?.pause();
+  _shadowAudio = null;
+  const btn = document.getElementById("shadowPlayBtn");
+  if (btn) btn.textContent = t("shadowPlay");
+  const st = document.getElementById("shadowStatus"); if (st) st.textContent = "";
+  const fill = document.getElementById("shadowBarFill"); if (fill) fill.style.width = "0%";
+  highlightShadowItem(-1);
+}
+
+async function startShadowPlay() {
+  const items = loadShadowing();
+  if (!items.length) return;
+  _shadowPlaying = true;
+  _shadowIdx = _shadowIdx >= items.length ? 0 : _shadowIdx;
+  const btn = document.getElementById("shadowPlayBtn");
+  if (btn) btn.textContent = t("shadowStop");
+  while (_shadowPlaying) {
+    const items2 = loadShadowing();
+    if (!items2.length) { stopShadowPlay(); break; }
+    if (_shadowIdx >= items2.length) _shadowIdx = 0;
+    const item = items2[_shadowIdx];
+    highlightShadowItem(_shadowIdx);
+    const ctr = document.getElementById("shadowCounter");
+    if (ctr) ctr.textContent = `${_shadowIdx+1} / ${items2.length}`;
+    const st = document.getElementById("shadowStatus"); if (st) st.textContent = "";
+    // Play TTS
+    await playShadowTTS(item.text);
+    if (!_shadowPlaying) break;
+    // Wait phase — animate bar while user repeats
+    const PAUSE = 3500;
+    const fill = document.getElementById("shadowBarFill");
+    if (fill) fill.style.width = "0%";
+    const st2 = document.getElementById("shadowStatus"); if (st2) st2.textContent = t("shadowWaiting");
+    await new Promise(resolve => {
+      let elapsed = 0;
+      const tick = 50;
+      const step = () => {
+        if (!_shadowPlaying) { resolve(); return; }
+        elapsed += tick;
+        if (fill) fill.style.width = Math.min(100, elapsed/PAUSE*100) + "%";
+        if (elapsed >= PAUSE) resolve();
+        else _shadowPauseTimer = setTimeout(step, tick);
+      };
+      _shadowPauseTimer = setTimeout(step, tick);
+    });
+    if (!_shadowPlaying) break;
+    if (fill) fill.style.width = "0%";
+    _shadowIdx++;
+  }
+}
+
+async function playShadowTTS(text) {
+  return new Promise(async resolve => {
+    try {
+      const res = await fetch(`${API_URL}/tts`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ text, voice: document.getElementById("voiceSelect").value })
+      });
+      if (!res.ok) { resolve(); return; }
+      const url = URL.createObjectURL(await res.blob());
+      _shadowAudio = new Audio(url);
+      _shadowAudio.onended = () => { URL.revokeObjectURL(url); _shadowAudio=null; resolve(); };
+      _shadowAudio.onerror  = () => { URL.revokeObjectURL(url); _shadowAudio=null; resolve(); };
+      _shadowAudio.play();
+    } catch { resolve(); }
+  });
+}
+
+function highlightShadowItem(idx) {
+  document.querySelectorAll(".shadow-item").forEach((el, i) => el.classList.toggle("active", i===idx));
+  if (idx >= 0) document.querySelectorAll(".shadow-item")[idx]?.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
