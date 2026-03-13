@@ -250,7 +250,10 @@
   </div>
   <div class="setting-group" style="justify-content:flex-end;">
     <label style="opacity:0;">_</label>
-    <button class="btn-sm" id="btnLibrary" onclick="openLibrary()" style="border-radius:10px;">📚 Danh sách học</button>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-sm" id="btnLibrary" onclick="openLibrary()">📚 Danh sách học</button>
+      <button class="btn-sm" id="btnReview" onclick="startReview()" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);">🔁 Review</button>
+    </div>
   </div>
 </div>
 
@@ -332,6 +335,7 @@ const STRINGS = {
     shadowBtn:"🎙 Shadowing", shadowTitle:"🎙 Shadowing", shadowPlay:"▶ Phát", shadowStop:"⏹ Dừng",
     shadowEmpty:"Chưa có câu nào. Thêm từ danh sách câu.", shadowAdded:"✅ Đã thêm vào Shadowing!", shadowExists:"⚠️ Đã có trong Shadowing!",
     shadowWaiting:"Nhắc lại...", shadowAdd:"🎙",
+    btnReview:"🔁 Review", reviewTitle:"🔁 Ôn luyện", reviewEmpty:"⚠️ Chưa có câu nào trong danh sách học!",
     setupTitle:"🎌 Chọn ngữ cảnh học hôm nay", setupCustomLabel:"✍️ Hoặc tự nhập ngữ cảnh:",
     setupCustomPlaceholder:"VD: Bạn là bạn cùng lớp người Nhật...", setupStartBtn:"Bắt đầu →",
     roleTitle:"🎭 Chọn vai diễn", roleYou:"🙋 Bạn đóng vai:", roleSensei:"🤖 Sensei đóng vai:",
@@ -377,6 +381,7 @@ const STRINGS = {
     shadowBtn:"🎙 Shadowing", shadowTitle:"🎙 Shadowing", shadowPlay:"▶ Play", shadowStop:"⏹ Stop",
     shadowEmpty:"No sentences yet. Add from Study List → Sentences.", shadowAdded:"✅ Added to Shadowing!", shadowExists:"⚠️ Already in Shadowing!",
     shadowWaiting:"Repeat...", shadowAdd:"🎙",
+    btnReview:"🔁 Review", reviewTitle:"🔁 Review", reviewEmpty:"⚠️ No sentences in Study List yet!",
     setupTitle:"🎌 Choose today's context", setupCustomLabel:"✍️ Or enter custom context:",
     setupCustomPlaceholder:"E.g. You are a Japanese classmate...", setupStartBtn:"Start →",
     roleTitle:"🎭 Choose roles", roleYou:"🙋 You play as:", roleSensei:"🤖 Sensei plays as:",
@@ -422,6 +427,7 @@ const STRINGS = {
     shadowBtn:"🎙 シャドーイング", shadowTitle:"🎙 シャドーイング", shadowPlay:"▶ 再生", shadowStop:"⏹ 停止",
     shadowEmpty:"まだ文がありません。学習リストから追加してください。", shadowAdded:"✅ シャドーイングに追加！", shadowExists:"⚠️ すでに追加済み！",
     shadowWaiting:"繰り返して...", shadowAdd:"🎙",
+    btnReview:"🔁 復習", reviewTitle:"🔁 復習", reviewEmpty:"⚠️ 学習リストにまだ文がありません！",
     setupTitle:"🎌 今日の場面を選ぶ", setupCustomLabel:"✍️ または場面を入力：",
     setupCustomPlaceholder:"例：あなたは日本人のクラスメートです...", setupStartBtn:"始める →",
     roleTitle:"🎭 役を選ぶ", roleYou:"🙋 あなたの役：", roleSensei:"🤖 先生の役：",
@@ -457,7 +463,7 @@ function applyLang() {
   const s = STRINGS[uiLang];
   const ids = ["labelLevel","labelVoice","labelMic","labelLang",
     "optBeginner","optElementary","optIntermediate","optAdvanced",
-    "optMicVi","optMicEn","optMicJa","btnLibrary","btnRestart","sendBtn"];
+    "optMicVi","optMicEn","optMicJa","btnLibrary","btnReview","btnRestart","sendBtn"];
   for (const id of ids) { const el=document.getElementById(id); if(el) el.textContent=s[id]; }
   document.getElementById("analysisBtn").textContent = analysisOn ? s.btnAnalysisOn : s.btnAnalysisOff;
   document.getElementById("textInput").placeholder = s.inputPlaceholder;
@@ -558,6 +564,62 @@ function confirmRoles(label, prompt) {
   const { you, sensei } = window._roles;
   const full = `${prompt}\n\nLearner plays as: ${you}.\nYou (Sensei) play as: ${sensei}.\nBegin the conversation naturally in Japanese, in character.`;
   startSession(`${label} · 🙋${you} vs 🤖${sensei}`, full);
+}
+
+// ── Review session ────────────────────────────────────────────────────────────
+function startReview() {
+  const lib = loadLib();
+  if (!lib.sentences.length) { showToast(t("reviewEmpty")); return; }
+
+  const sentenceList = lib.sentences
+    .map((s, i) => `${i+1}. "${s.text}"${s.extra ? ` (${s.extra})` : ""}`)
+    .join("\n");
+
+  const contextPrompt = `[REVIEW SESSION]
+The learner has saved these Japanese sentences to their study list:
+${sentenceList}
+
+Your role as Sensei:
+- Go through these sentences one by one in order.
+- For each sentence, set up a natural situation or ask a question that would naturally prompt the learner to say that exact sentence (or a close variation).
+- Example: if the sentence is "いらっしゃいませ、何になさいますか？", put the learner in the role of a shop clerk and ask them to greet a customer.
+- If the learner replies correctly or close to the target sentence, praise them briefly and move to the next.
+- If they struggle, give a short hint in ${uiLang==="vi"?"Vietnamese":uiLang==="ja"?"Japanese":"English"} and try again.
+- After covering all sentences, loop back and test them again in creative new ways.
+- Keep responses SHORT and encouraging. Always end with a prompt or question to elicit the next sentence.`;
+
+  history = [];
+  const chatArea = document.getElementById("chatArea");
+  chatArea.innerHTML = "";
+  document.getElementById("setupScreen")?.remove();
+
+  const badge = document.createElement("div");
+  badge.style.cssText = "font-size:0.72rem;color:#a78bfa;text-align:center;padding:4px 0 8px;font-weight:600;";
+  badge.textContent = `📍 ${t("reviewTitle")} — ${lib.sentences.length} sentences`;
+  chatArea.appendChild(badge);
+
+  document.getElementById("micBtn").disabled = false;
+  document.getElementById("sendBtn").disabled = false;
+  document.getElementById("micHint").textContent = t("micHintReady");
+
+  history.push({ role: "user", content: `${contextPrompt}\n\nStart NOW with sentence #1. Set up the situation and prompt the learner.` });
+
+  setBusy(true);
+  addTyping();
+  setStatus(t("statusPreparing"), "thinking");
+
+  fetch(`${API_URL}/chat`, {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ history, level: document.getElementById("levelSelect").value, ui_lang: uiLang })
+  })
+  .then(r => r.json())
+  .then(data => {
+    removeTyping();
+    history.push({ role: "assistant", content: JSON.stringify(data) });
+    addAIBubble(data);
+    playTTS(data.tts_text);
+  })
+  .catch(e => { removeTyping(); addAIBubble({reply_text:`❌ ${e.message}`, tts_text:""}); setBusy(false); setStatus(t("statusError"), "idle"); });
 }
 
 // ── Start session ─────────────────────────────────────────────────────────────
