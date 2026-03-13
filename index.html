@@ -206,32 +206,41 @@
 <!-- Settings -->
 <div class="settings">
   <div class="setting-group">
-    <label>📊 Trình độ</label>
+    <label id="labelLevel">📊 Trình độ</label>
     <select id="levelSelect" onchange="onSettingChange()">
-      <option value="beginner">Mới bắt đầu</option>
-      <option value="elementary">Sơ cấp (N5-N4)</option>
-      <option value="intermediate">Trung cấp (N3-N4)</option>
-      <option value="advanced">Nâng cao (N1-N2)</option>
+      <option value="beginner"     id="optBeginner">Mới bắt đầu</option>
+      <option value="elementary"   id="optElementary">Sơ cấp (N5-N4)</option>
+      <option value="intermediate" id="optIntermediate">Trung cấp (N3-N4)</option>
+      <option value="advanced"     id="optAdvanced">Nâng cao (N1-N2)</option>
     </select>
   </div>
   <div class="setting-group">
-    <label>🎙 Giọng Sensei</label>
+    <label id="labelVoice">🎙 Giọng Sensei</label>
     <select id="voiceSelect" onchange="onSettingChange()">
-      <option value="jf_alpha">Yuki 👩 (Nữ)</option>
-      <option value="jf_gongitsune">Gongitsune 👩 (Nữ)</option>
-      <option value="jm_kumo">Kumo 👨 (Nam)</option>
+      <option value="jf_alpha">Yuki 👩</option>
+      <option value="jf_gongitsune">Gongitsune 👩</option>
+      <option value="jm_kumo">Kumo 👨</option>
     </select>
   </div>
   <div class="setting-group">
-    <label>🗣 Ngôn ngữ mic</label>
+    <label id="labelMic">🗣 Mic</label>
     <select id="srLangSelect">
-      <option value="vi-VN">Tiếng Việt</option>
-      <option value="ja-JP">Tiếng Nhật</option>
+      <option value="vi-VN" id="optMicVi">Tiếng Việt</option>
+      <option value="en-US" id="optMicEn">Tiếng Anh</option>
+      <option value="ja-JP" id="optMicJa">Tiếng Nhật</option>
+    </select>
+  </div>
+  <div class="setting-group">
+    <label id="labelLang">🌐 Ngôn ngữ</label>
+    <select id="langSelect" onchange="onLangChange()">
+      <option value="vi">🇻🇳 Tiếng Việt</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="ja">🇯🇵 日本語</option>
     </select>
   </div>
   <div class="setting-group" style="justify-content:flex-end;">
     <label style="opacity:0;">_</label>
-    <button class="btn-sm" onclick="openLibrary()" style="border-radius:10px;">📚 Danh sách học</button>
+    <button class="btn-sm" id="btnLibrary" onclick="openLibrary()" style="border-radius:10px;">📚 Danh sách học</button>
   </div>
 </div>
 
@@ -242,6 +251,7 @@
   <div class="teacher-status">
     <div class="sdot" id="sdot"></div>
     <span id="statusText">Chọn ngữ cảnh để bắt đầu!</span>
+
   </div>
 </div>
 
@@ -249,21 +259,12 @@
 <div class="chat-area" id="chatArea">
   <!-- Setup screen injected here -->
   <div id="setupScreen" style="display:flex;flex-direction:column;gap:14px;padding:8px 4px;">
-    <div style="font-size:0.85rem;color:#a5b4fc;font-weight:600;text-align:center;">🎌 Chọn ngữ cảnh học hôm nay</div>
-    <div id="contextGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div class="ctx-card" onclick="selectContext(this,'🍜 Nhà hàng','Bạn là nhân viên phục vụ nhà hàng Nhật. Tôi là khách hàng vừa bước vào.')">🍜<br>Nhà hàng</div>
-      <div class="ctx-card" onclick="selectContext(this,'🛒 Mua sắm','Bạn là nhân viên cửa hàng quần áo Nhật. Tôi là khách hàng đang xem đồ.')">🛒<br>Mua sắm</div>
-      <div class="ctx-card" onclick="selectContext(this,'🚉 Hỏi đường','Bạn là người dân địa phương ở Nhật. Tôi là du khách đang bị lạc.')">🚉<br>Hỏi đường</div>
-      <div class="ctx-card" onclick="selectContext(this,'🏥 Bệnh viện','Bạn là bác sĩ tại bệnh viện Nhật. Tôi là bệnh nhân đến khám.')">🏥<br>Bệnh viện</div>
-      <div class="ctx-card" onclick="selectContext(this,'💼 Xin việc','Bạn là nhà tuyển dụng người Nhật. Tôi là ứng viên đang phỏng vấn.')">💼<br>Xin việc</div>
-      <div class="ctx-card" onclick="selectContext(this,'🏫 Lớp học','Bạn là giáo viên trong lớp học tiếng Nhật. Tôi là học sinh mới.')">🏫<br>Lớp học</div>
-      <div class="ctx-card" onclick="selectContext(this,'☕ Quán cà phê','Bạn là nhân viên quán cà phê Nhật. Tôi là khách hàng vào gọi đồ.')">☕<br>Quán cà phê</div>
-      <div class="ctx-card" onclick="selectContext(this,'🏨 Khách sạn','Bạn là lễ tân khách sạn Nhật. Tôi là khách đến check-in.')">🏨<br>Khách sạn</div>
-    </div>
+    <div id="setupTitle" style="font-size:0.85rem;color:#a5b4fc;font-weight:600;text-align:center;">🎌 Chọn ngữ cảnh học hôm nay</div>
+    <div id="contextGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      <div style="font-size:0.75rem;color:#475569;">✍️ Hoặc tự nhập ngữ cảnh:</div>
-      <textarea id="customCtx" placeholder="VD: Bạn là bạn cùng lớp người Nhật, chúng ta đang nói chuyện về anime..." style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px 14px;color:#fff;font-size:0.82rem;resize:none;outline:none;height:70px;line-height:1.5;"></textarea>
-      <button onclick="startCustomContext()" style="align-self:flex-end;padding:8px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;">Bắt đầu →</button>
+      <div id="setupCustomLabel" style="font-size:0.75rem;color:#475569;">✍️ Hoặc tự nhập ngữ cảnh:</div>
+      <textarea id="customCtx" placeholder="VD: Bạn là bạn cùng lớp người Nhật..." style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px 14px;color:#fff;font-size:0.82rem;resize:none;outline:none;height:70px;line-height:1.5;"></textarea>
+      <button id="setupStartBtn" onclick="startCustomContext()" style="align-self:flex-end;padding:8px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;">Bắt đầu →</button>
     </div>
   </div>
 </div>
@@ -271,13 +272,14 @@
 <!-- Controls -->
 <div class="controls-row">
   <button class="btn-sm" onclick="toggleAnalysis()" id="analysisBtn">🔍 Phân tích: BẬT</button>
-  <button class="btn-sm" onclick="location.reload()">🔄 Bắt đầu lại</button>
+  <button class="btn-sm" onclick="location.reload()" id="btnRestart">🔄 Bắt đầu lại</button>
 </div>
 
 <!-- Mic -->
 <div class="mic-wrap">
   <button class="mic-btn" id="micBtn" onclick="toggleMic()" disabled>🎤</button>
   <span class="mic-hint" id="micHint">Chọn ngữ cảnh trước</span>
+
   <div class="live-text" id="liveText"></div>
 </div>
 
@@ -285,6 +287,7 @@
 <div class="text-row">
   <input type="text" id="textInput" placeholder="Hoặc gõ câu hỏi ở đây..." onkeydown="if(event.key==='Enter')sendText()" />
   <button class="send-btn" id="sendBtn" onclick="sendText()" disabled>Gửi</button>
+
 </div>
 
 <script>
@@ -296,17 +299,164 @@ const API_URL = "https://mistral-backend-vzcs.onrender.com";
 
 let history = [], isBusy = false, isRecording = false, recognition = null;
 let lastTtsText = "", analysisOn = true, libTab = "sentence";
+let uiLang = "vi";
 
-const ROLE_SUGGESTIONS = {
-  "🍜 Nhà hàng":    { you:["Khách hàng","Thực khách VIP","Khách nước ngoài"],       sensei:["Nhân viên phục vụ","Đầu bếp","Quản lý"] },
-  "🛒 Mua sắm":     { you:["Khách mua đồ","Khách tìm quà","Khách nước ngoài"],      sensei:["Nhân viên cửa hàng","Thu ngân","Quản lý"] },
-  "🚉 Hỏi đường":   { you:["Du khách bị lạc","Người mới đến Nhật"],                 sensei:["Người dân địa phương","Nhân viên ga tàu","Cảnh sát"] },
-  "🏥 Bệnh viện":   { you:["Bệnh nhân","Người nhà bệnh nhân","Du khách bị ốm"],     sensei:["Bác sĩ","Y tá","Lễ tân bệnh viện"] },
-  "💼 Xin việc":    { you:["Ứng viên fresher","Ứng viên có kinh nghiệm"],            sensei:["Nhà tuyển dụng","Trưởng phòng HR","Giám đốc"] },
-  "🏫 Lớp học":     { you:["Học sinh mới","Học sinh trung cấp"],                     sensei:["Giáo viên","Bạn cùng lớp","Giáo sư"] },
-  "☕ Quán cà phê":  { you:["Khách gọi đồ","Khách làm việc","Khách hẹn gặp bạn"],   sensei:["Nhân viên pha chế","Chủ quán","Bạn cùng bàn"] },
-  "🏨 Khách sạn":   { you:["Khách check-in","Khách hỏi dịch vụ","Khách phàn nàn"],  sensei:["Lễ tân","Nhân viên hành lý","Quản lý"] },
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const STRINGS = {
+  vi: {
+    labelLevel:"📊 Trình độ", labelVoice:"🎙 Giọng Sensei", labelMic:"🗣 Mic", labelLang:"🌐 Ngôn ngữ",
+    optBeginner:"Mới bắt đầu", optElementary:"Sơ cấp (N5-N4)", optIntermediate:"Trung cấp (N3-N4)", optAdvanced:"Nâng cao (N1-N2)",
+    optMicVi:"Tiếng Việt", optMicEn:"Tiếng Anh", optMicJa:"Tiếng Nhật",
+    btnAnalysisOn:"🔍 Phân tích: BẬT", btnAnalysisOff:"🔍 Phân tích: TẮT",
+    btnLibrary:"📚 Danh sách học", btnRestart:"🔄 Bắt đầu lại",
+    sendBtn:"Gửi", inputPlaceholder:"Hoặc gõ câu hỏi ở đây...",
+    micHintInit:"Chọn ngữ cảnh trước", micHintReady:"Nhấn để nói", micHintListening:"Đang nghe...", micHintReply:"Nhấn để trả lời",
+    statusInit:"Chọn ngữ cảnh để bắt đầu!", statusReady:"Sẵn sàng!", statusThinking:"Sensei đang suy nghĩ...",
+    statusSpeaking:"Sensei đang nói...", statusPreparing:"Sensei đang chuẩn bị...", statusError:"Lỗi kết nối",
+    statusNoBackend:"⚠️ Không kết nối được backend",
+    replayBtn:"🔊 Nghe lại", analysisLoading:"⏳ Đang phân tích...",
+    floatSentence:"💬 Lưu câu", floatWord:"📝 Lưu từ", floatTranslating:"⏳ Đang dịch...",
+    libTitle:"📚 Danh sách học", libTabSentence:"💬 Câu", libTabWord:"📝 Từ",
+    libEmptySentence:"Chưa có câu nào", libEmptyWord:"Chưa có từ nào",
+    toastSavedSentence:"✅ Đã lưu câu!", toastSavedWord:"✅ Đã lưu từ!", toastExists:"⚠️ Đã có trong danh sách!", toastView:"Xem",
+    setupTitle:"🎌 Chọn ngữ cảnh học hôm nay", setupCustomLabel:"✍️ Hoặc tự nhập ngữ cảnh:",
+    setupCustomPlaceholder:"VD: Bạn là bạn cùng lớp người Nhật...", setupStartBtn:"Bắt đầu →",
+    roleTitle:"🎭 Chọn vai diễn", roleYou:"🙋 Bạn đóng vai:", roleSensei:"🤖 Sensei đóng vai:",
+    roleYouPh:"Hoặc tự nhập vai của bạn...", roleSenseiPh:"Hoặc tự nhập vai của Sensei...",
+    roleBack:"← Quay lại", roleStart:"Bắt đầu →", customCtxLabel:"✍️ Tùy chỉnh", roleYouShort:"Bạn",
+    ctx:[
+      {emoji:"🍜",name:"Nhà hàng",  prompt:"You are a Japanese restaurant server. The learner is a customer who just walked in."},
+      {emoji:"🛒",name:"Mua sắm",   prompt:"You are a Japanese clothing store staff. The learner is a customer browsing."},
+      {emoji:"🚉",name:"Hỏi đường", prompt:"You are a local Japanese person. The learner is a lost tourist."},
+      {emoji:"🏥",name:"Bệnh viện", prompt:"You are a doctor at a Japanese hospital. The learner is a patient."},
+      {emoji:"💼",name:"Xin việc",  prompt:"You are a Japanese recruiter. The learner is a job candidate."},
+      {emoji:"🏫",name:"Lớp học",   prompt:"You are a Japanese language teacher. The learner is a new student."},
+      {emoji:"☕",name:"Quán cà phê",prompt:"You are a Japanese café barista. The learner is a customer."},
+      {emoji:"🏨",name:"Khách sạn", prompt:"You are a Japanese hotel receptionist. The learner is a guest checking in."},
+    ],
+    roles:{
+      "🍜":{you:["Khách hàng","Thực khách VIP","Khách nước ngoài"],       sensei:["Nhân viên phục vụ","Đầu bếp","Quản lý"]},
+      "🛒":{you:["Khách mua đồ","Khách tìm quà","Khách nước ngoài"],      sensei:["Nhân viên cửa hàng","Thu ngân","Quản lý"]},
+      "🚉":{you:["Du khách bị lạc","Người mới đến Nhật"],                 sensei:["Người dân địa phương","Nhân viên ga tàu","Cảnh sát"]},
+      "🏥":{you:["Bệnh nhân","Người nhà bệnh nhân"],                      sensei:["Bác sĩ","Y tá","Lễ tân bệnh viện"]},
+      "💼":{you:["Ứng viên fresher","Ứng viên có kinh nghiệm"],           sensei:["Nhà tuyển dụng","Trưởng phòng HR","Giám đốc"]},
+      "🏫":{you:["Học sinh mới","Học sinh trung cấp"],                    sensei:["Giáo viên","Bạn cùng lớp","Giáo sư"]},
+      "☕":{you:["Khách gọi đồ","Khách làm việc","Khách hẹn gặp bạn"],   sensei:["Nhân viên pha chế","Chủ quán","Bạn cùng bàn"]},
+      "🏨":{you:["Khách check-in","Khách hỏi dịch vụ","Khách phàn nàn"], sensei:["Lễ tân","Nhân viên hành lý","Quản lý"]},
+    }
+  },
+  en: {
+    labelLevel:"📊 Level", labelVoice:"🎙 Sensei Voice", labelMic:"🗣 Mic", labelLang:"🌐 Language",
+    optBeginner:"Beginner", optElementary:"Elementary (N5-N4)", optIntermediate:"Intermediate (N3-N4)", optAdvanced:"Advanced (N1-N2)",
+    optMicVi:"Vietnamese", optMicEn:"English", optMicJa:"Japanese",
+    btnAnalysisOn:"🔍 Analysis: ON", btnAnalysisOff:"🔍 Analysis: OFF",
+    btnLibrary:"📚 Study List", btnRestart:"🔄 Restart",
+    sendBtn:"Send", inputPlaceholder:"Or type your message here...",
+    micHintInit:"Choose a context first", micHintReady:"Tap to speak", micHintListening:"Listening...", micHintReply:"Tap to reply",
+    statusInit:"Choose a context to start!", statusReady:"Ready!", statusThinking:"Sensei is thinking...",
+    statusSpeaking:"Sensei is speaking...", statusPreparing:"Sensei is preparing...", statusError:"Connection error",
+    statusNoBackend:"⚠️ Cannot connect to backend",
+    replayBtn:"🔊 Replay", analysisLoading:"⏳ Analyzing...",
+    floatSentence:"💬 Save sentence", floatWord:"📝 Save word", floatTranslating:"⏳ Translating...",
+    libTitle:"📚 Study List", libTabSentence:"💬 Sentences", libTabWord:"📝 Words",
+    libEmptySentence:"No sentences yet", libEmptyWord:"No words yet",
+    toastSavedSentence:"✅ Sentence saved!", toastSavedWord:"✅ Word saved!", toastExists:"⚠️ Already in list!", toastView:"View",
+    setupTitle:"🎌 Choose today's context", setupCustomLabel:"✍️ Or enter custom context:",
+    setupCustomPlaceholder:"E.g. You are a Japanese classmate...", setupStartBtn:"Start →",
+    roleTitle:"🎭 Choose roles", roleYou:"🙋 You play as:", roleSensei:"🤖 Sensei plays as:",
+    roleYouPh:"Or enter your own role...", roleSenseiPh:"Or enter Sensei's role...",
+    roleBack:"← Back", roleStart:"Start →", customCtxLabel:"✍️ Custom", roleYouShort:"You",
+    ctx:[
+      {emoji:"🍜",name:"Restaurant",   prompt:"You are a Japanese restaurant server. The learner is a customer who just walked in."},
+      {emoji:"🛒",name:"Shopping",     prompt:"You are a Japanese clothing store staff. The learner is a customer browsing."},
+      {emoji:"🚉",name:"Directions",   prompt:"You are a local Japanese person. The learner is a lost tourist."},
+      {emoji:"🏥",name:"Hospital",     prompt:"You are a doctor at a Japanese hospital. The learner is a patient."},
+      {emoji:"💼",name:"Job Interview",prompt:"You are a Japanese recruiter. The learner is a job candidate."},
+      {emoji:"🏫",name:"Classroom",    prompt:"You are a Japanese language teacher. The learner is a new student."},
+      {emoji:"☕",name:"Café",         prompt:"You are a Japanese café barista. The learner is a customer."},
+      {emoji:"🏨",name:"Hotel",        prompt:"You are a Japanese hotel receptionist. The learner is a guest checking in."},
+    ],
+    roles:{
+      "🍜":{you:["Customer","VIP Guest","Tourist"],          sensei:["Waiter","Chef","Manager"]},
+      "🛒":{you:["Shopper","Gift hunter","Tourist"],         sensei:["Staff","Cashier","Manager"]},
+      "🚉":{you:["Lost tourist","New to Japan"],             sensei:["Local resident","Station staff","Police"]},
+      "🏥":{you:["Patient","Family member"],                 sensei:["Doctor","Nurse","Receptionist"]},
+      "💼":{you:["Fresh graduate","Experienced candidate"],  sensei:["Recruiter","HR Manager","Director"]},
+      "🏫":{you:["New student","Intermediate student"],      sensei:["Teacher","Classmate","Professor"]},
+      "☕":{you:["Coffee order","Working customer"],         sensei:["Barista","Owner","Friend"]},
+      "🏨":{you:["Check-in guest","Complaining guest"],      sensei:["Receptionist","Bellboy","Manager"]},
+    }
+  },
+  ja: {
+    labelLevel:"📊 レベル", labelVoice:"🎙 先生の声", labelMic:"🗣 マイク", labelLang:"🌐 言語",
+    optBeginner:"初心者", optElementary:"初級 (N5-N4)", optIntermediate:"中級 (N3-N4)", optAdvanced:"上級 (N1-N2)",
+    optMicVi:"ベトナム語", optMicEn:"英語", optMicJa:"日本語",
+    btnAnalysisOn:"🔍 分析：オン", btnAnalysisOff:"🔍 分析：オフ",
+    btnLibrary:"📚 学習リスト", btnRestart:"🔄 やり直し",
+    sendBtn:"送信", inputPlaceholder:"またはここに入力...",
+    micHintInit:"場面を選んでください", micHintReady:"タップして話す", micHintListening:"聞いています...", micHintReply:"タップして返答",
+    statusInit:"場面を選んで始めましょう！", statusReady:"準備完了！", statusThinking:"先生が考えています...",
+    statusSpeaking:"先生が話しています...", statusPreparing:"先生が準備しています...", statusError:"接続エラー",
+    statusNoBackend:"⚠️ バックエンドに接続できません",
+    replayBtn:"🔊 もう一度", analysisLoading:"⏳ 分析中...",
+    floatSentence:"💬 文を保存", floatWord:"📝 単語を保存", floatTranslating:"⏳ 翻訳中...",
+    libTitle:"📚 学習リスト", libTabSentence:"💬 文", libTabWord:"📝 単語",
+    libEmptySentence:"まだ文がありません", libEmptyWord:"まだ単語がありません",
+    toastSavedSentence:"✅ 文を保存しました！", toastSavedWord:"✅ 単語を保存しました！", toastExists:"⚠️ すでにリストにあります！", toastView:"確認",
+    setupTitle:"🎌 今日の場面を選ぶ", setupCustomLabel:"✍️ または場面を入力：",
+    setupCustomPlaceholder:"例：あなたは日本人のクラスメートです...", setupStartBtn:"始める →",
+    roleTitle:"🎭 役を選ぶ", roleYou:"🙋 あなたの役：", roleSensei:"🤖 先生の役：",
+    roleYouPh:"または自分で入力...", roleSenseiPh:"先生の役を入力...",
+    roleBack:"← 戻る", roleStart:"始める →", customCtxLabel:"✍️ カスタム", roleYouShort:"あなた",
+    ctx:[
+      {emoji:"🍜",name:"レストラン",  prompt:"You are a Japanese restaurant server. The learner is a customer who just walked in."},
+      {emoji:"🛒",name:"ショッピング",prompt:"You are a Japanese clothing store staff. The learner is a customer browsing."},
+      {emoji:"🚉",name:"道案内",      prompt:"You are a local Japanese person. The learner is a lost tourist."},
+      {emoji:"🏥",name:"病院",        prompt:"You are a doctor at a Japanese hospital. The learner is a patient."},
+      {emoji:"💼",name:"就活",        prompt:"You are a Japanese recruiter. The learner is a job candidate."},
+      {emoji:"🏫",name:"教室",        prompt:"You are a Japanese language teacher. The learner is a new student."},
+      {emoji:"☕",name:"カフェ",      prompt:"You are a Japanese café barista. The learner is a customer."},
+      {emoji:"🏨",name:"ホテル",      prompt:"You are a Japanese hotel receptionist. The learner is a guest checking in."},
+    ],
+    roles:{
+      "🍜":{you:["お客様","VIPゲスト","外国人観光客"],    sensei:["ウェイター","シェフ","マネージャー"]},
+      "🛒":{you:["買い物客","プレゼント探し","観光客"],   sensei:["店員","レジ係","マネージャー"]},
+      "🚉":{you:["迷子の観光客","初めて日本へ"],          sensei:["地元の人","駅員","警察"]},
+      "🏥":{you:["患者","家族"],                          sensei:["医者","看護師","受付"]},
+      "💼":{you:["新卒","経験者"],                        sensei:["採用担当","人事","部長"]},
+      "🏫":{you:["新入生","中級学生"],                    sensei:["先生","クラスメート","教授"]},
+      "☕":{you:["コーヒー注文","作業中"],                sensei:["バリスタ","オーナー"]},
+      "🏨":{you:["チェックイン","クレームのお客様"],      sensei:["フロント","ベルボーイ","マネージャー"]},
+    }
+  }
 };
+
+function t(key) { return STRINGS[uiLang][key] ?? key; }
+
+function applyLang() {
+  const s = STRINGS[uiLang];
+  const ids = ["labelLevel","labelVoice","labelMic","labelLang",
+    "optBeginner","optElementary","optIntermediate","optAdvanced",
+    "optMicVi","optMicEn","optMicJa","btnLibrary","btnRestart","sendBtn"];
+  for (const id of ids) { const el=document.getElementById(id); if(el) el.textContent=s[id]; }
+  document.getElementById("analysisBtn").textContent = analysisOn ? s.btnAnalysisOn : s.btnAnalysisOff;
+  document.getElementById("textInput").placeholder = s.inputPlaceholder;
+  if (document.getElementById("micBtn")?.disabled)
+    document.getElementById("micHint").textContent = s.micHintInit;
+  // Setup screen elements
+  ["setupTitle","setupCustomLabel","setupStartBtn"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=s[id];});
+  const cCtx=document.getElementById("customCtx"); if(cCtx) cCtx.placeholder=s.setupCustomPlaceholder;
+  // Rebuild context grid
+  const grid=document.getElementById("contextGrid");
+  if (grid) grid.innerHTML = s.ctx.map(c=>
+    `<div class="ctx-card" onclick="selectContext(this,'${c.emoji} ${c.name}','${c.prompt.replace(/'/g,"\\'")}')">
+      ${c.emoji}<br>${c.name}</div>`).join("");
+}
+
+function onLangChange() {
+  uiLang = document.getElementById("langSelect").value;
+  applyLang();
+}
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 function onSettingChange() {
@@ -338,31 +488,32 @@ function selectContext(el, label, prompt) {
 function startCustomContext() {
   const txt = document.getElementById("customCtx").value.trim();
   if (!txt) return;
-  showRoleScreen("✍️ Tùy chỉnh", txt);
+  showRoleScreen(t("customCtxLabel"), txt);
 }
 function showRoleScreen(label, prompt) {
   const screen = document.getElementById("setupScreen");
-  const sugg   = ROLE_SUGGESTIONS[label] || { you:["Người học"], sensei:["Nhân vật"] };
+  const emoji  = [...label][0];
+  const sugg   = STRINGS[uiLang].roles[emoji] || { you:[], sensei:[] };
   screen.innerHTML = `
-    <div style="font-size:0.85rem;color:#a5b4fc;font-weight:600;text-align:center;">🎭 Chọn vai diễn</div>
+    <div style="font-size:0.85rem;color:#a5b4fc;font-weight:600;text-align:center;">${t("roleTitle")}</div>
     <div style="font-size:0.72rem;color:#475569;text-align:center;">📍 ${label}</div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      <div style="font-size:0.78rem;color:#94a3b8;">🙋 Bạn đóng vai:</div>
+      <div style="font-size:0.78rem;color:#94a3b8;">${t("roleYou")}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;" id="youChips">
         ${sugg.you.map(r=>`<span class="role-chip" data-who="you" data-val="${r}" onclick="pickRole('you','${r}')">${r}</span>`).join("")}
       </div>
-      <input id="youCustom" placeholder="Hoặc tự nhập vai của bạn..." oninput="pickRole('you',this.value)" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;color:#fff;font-size:0.8rem;outline:none;"/>
+      <input id="youCustom" placeholder="${t("roleYouPh")}" oninput="pickRole('you',this.value)" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;color:#fff;font-size:0.8rem;outline:none;"/>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-      <div style="font-size:0.78rem;color:#94a3b8;">🤖 Sensei đóng vai:</div>
+      <div style="font-size:0.78rem;color:#94a3b8;">${t("roleSensei")}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;" id="senseiChips">
         ${sugg.sensei.map(r=>`<span class="role-chip" data-who="sensei" data-val="${r}" onclick="pickRole('sensei','${r}')">${r}</span>`).join("")}
       </div>
-      <input id="senseiCustom" placeholder="Hoặc tự nhập vai của Sensei..." oninput="pickRole('sensei',this.value)" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;color:#fff;font-size:0.8rem;outline:none;"/>
+      <input id="senseiCustom" placeholder="${t("roleSenseiPh")}" oninput="pickRole('sensei',this.value)" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;color:#fff;font-size:0.8rem;outline:none;"/>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:8px;gap:8px;">
-      <button onclick="location.reload()" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#64748b;font-size:0.78rem;cursor:pointer;">← Quay lại</button>
-      <button onclick="confirmRoles('${label}','${prompt.replace(/'/g,"\\'")}')" id="startBtn" disabled style="padding:8px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;opacity:0.4;">Bắt đầu →</button>
+      <button onclick="location.reload()" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#64748b;font-size:0.78rem;cursor:pointer;">${t("roleBack")}</button>
+      <button onclick="confirmRoles('${label}','${prompt.replace(/'/g,"\\'")}')" id="startBtn" disabled style="padding:8px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;opacity:0.4;">${t("roleStart")}</button>
     </div>
   `;
   window._roles = { you:"", sensei:"" };
@@ -381,7 +532,7 @@ function pickRole(who, val) {
 }
 function confirmRoles(label, prompt) {
   const { you, sensei } = window._roles;
-  const full = `${prompt}\n\nNgười học đóng vai: ${you}.\nBạn (Sensei) đóng vai: ${sensei}.\nBắt đầu hội thoại tự nhiên bằng tiếng Nhật theo đúng vai của bạn.`;
+  const full = `${prompt}\n\nLearner plays as: ${you}.\nYou (Sensei) play as: ${sensei}.\nBegin the conversation naturally in Japanese, in character.`;
   startSession(`${label} · 🙋${you} vs 🤖${sensei}`, full);
 }
 
@@ -396,18 +547,18 @@ function startSession(label, contextPrompt) {
 
   document.getElementById("micBtn").disabled  = false;
   document.getElementById("sendBtn").disabled = false;
-  document.getElementById("micHint").textContent = "Nhấn để nói";
+  document.getElementById("micHint").textContent = t("micHintReady");
 
   const kickoff = `[SCENARIO]\n${contextPrompt}\n\nStart the role-play NOW. Say your opening line as your character naturally would. Be authentic, not textbook. 1-2 sentences only.`;
   history.push({ role:"user", content:kickoff });
 
   setBusy(true);
   addTyping();
-  setStatus("Sensei đang chuẩn bị...", "thinking");
+  setStatus(t("statusPreparing"), "thinking");
 
   fetch(`${API_URL}/chat`, {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ history, level: document.getElementById("levelSelect").value })
+    body: JSON.stringify({ history, level: document.getElementById("levelSelect").value, ui_lang: uiLang })
   })
   .then(r=>r.json())
   .then(data => {
@@ -416,7 +567,7 @@ function startSession(label, contextPrompt) {
     addAIBubble(data);
     playTTS(data.tts_text);
   })
-  .catch(e => { removeTyping(); addAIBubble({reply_text:`❌ ${e.message}`,tts_text:""}); setBusy(false); setStatus("Lỗi","idle"); });
+  .catch(e => { removeTyping(); addAIBubble({reply_text:`❌ ${e.message}`,tts_text:""}); setBusy(false); setStatus(t("statusError"),"idle"); });
 }
 
 // ── Chat UI ───────────────────────────────────────────────────────────────────
@@ -428,7 +579,8 @@ function addUserBubble(text) {
   b.className = "bubble"; b.textContent = text;
   const m = document.createElement("div");
   m.className = "meta";
-  m.textContent = "Bạn • " + new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
+  const _loc = uiLang==="ja"?"ja-JP":uiLang==="en"?"en-US":"vi-VN";
+  m.textContent = t("roleYouShort") + " • " + new Date().toLocaleTimeString(_loc,{hour:"2-digit",minute:"2-digit"});
   wrap.appendChild(b); wrap.appendChild(m);
   chat.appendChild(wrap);
   chat.scrollTop = 99999;
@@ -446,13 +598,14 @@ function addAIBubble(data) {
     <div class="jt">${data.tts_text || data.reply_text || ""}</div>
     ${data.romaji?`<div class="jr">📖 ${data.romaji}</div>`:""}
     ${data.translation?`<div class="jm">🇻🇳 ${data.translation}</div>`:""}
-    <button class="jbtn" onclick="replayTTS()">🔊 Nghe lại</button>
+    <button class="jbtn" onclick="replayTTS()">${t("replayBtn")}</button>
   `;
   wrap.appendChild(card);
 
   const m = document.createElement("div");
   m.className = "meta";
-  m.textContent = "AI • " + new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
+  const _loc2 = uiLang==="ja"?"ja-JP":uiLang==="en"?"en-US":"vi-VN";
+  m.textContent = "AI • " + new Date().toLocaleTimeString(_loc2,{hour:"2-digit",minute:"2-digit"});
   wrap.appendChild(m);
 
   chat.appendChild(wrap);
@@ -513,15 +666,15 @@ function showFloatBar(text, romaji, translation, rect) {
   bar.className = "float-save-bar";
 
   const btnS = document.createElement("button");
-  btnS.className = "fsb-sentence"; btnS.textContent = "💬 Lưu câu";
+  btnS.className = "fsb-sentence"; btnS.textContent = t("floatSentence");
   btnS.onclick = () => { saveItem("sentence", text, romaji, translation); hideFloatBar(); window.getSelection()?.removeAllRanges(); };
 
   const btnW = document.createElement("button");
-  btnW.className = "fsb-word"; btnW.textContent = "📝 Lưu từ";
+  btnW.className = "fsb-word"; btnW.textContent = t("floatWord");
   btnW.onclick = async () => {
-    btnW.textContent = "⏳..."; btnW.disabled = true;
+    btnW.textContent = t("floatTranslating"); btnW.disabled = true;
     try {
-      const res  = await fetch(`${API_URL}/translate`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ word: text }) });
+      const res  = await fetch(`${API_URL}/translate`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ word: text, ui_lang: uiLang }) });
       const data = await res.json();
       saveItem("word", text, data.romaji||"", data.translation||"");
     } catch { saveItem("word", text, "", ""); }
@@ -569,18 +722,18 @@ function showSavePopup(x, y, text, romaji, translation) {
   div.className = "save-popup";
 
   const btnSentence = document.createElement("button");
-  btnSentence.textContent = "💬 Lưu câu";
+  btnSentence.textContent = t("floatSentence");
   btnSentence.onclick = () => { saveItem("sentence", text, romaji||"", translation||""); closePopup(); };
 
   const btnWord = document.createElement("button");
-  btnWord.textContent = "📝 Lưu từ";
+  btnWord.textContent = t("floatWord");
   btnWord.onclick = async () => {
-    btnWord.textContent = "⏳ Đang dịch...";
+    btnWord.textContent = t("floatTranslating");
     btnWord.disabled = true;
     try {
       const res  = await fetch(`${API_URL}/translate`, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ word: text })
+        body: JSON.stringify({ word: text, ui_lang: uiLang })
       });
       const data = await res.json();
       saveItem("word", text, data.romaji||"", data.translation||"");
@@ -592,7 +745,7 @@ function showSavePopup(x, y, text, romaji, translation) {
 
   const sep = document.createElement("div"); sep.className = "sep";
   const btnClose = document.createElement("button");
-  btnClose.textContent = "✕ Đóng";
+  btnClose.textContent = "✕";
   btnClose.onclick = closePopup;
 
   div.appendChild(btnSentence); div.appendChild(btnWord);
@@ -619,10 +772,11 @@ function saveItem(type, text, extra, translation) {
   const lib  = loadLib();
   const list = type==="sentence" ? lib.sentences : lib.words;
   const exists = list.find(i=>i.text===text);
-  if (exists) { showToast(`⚠️ Đã có trong danh sách!`, exists.id, type); return; }
-  list.unshift({ id:Date.now().toString(), text, extra:extra||"", translation:translation||"", savedAt:new Date().toLocaleString("vi-VN") });
+  if (exists) { showToast(t("toastExists"), exists.id, type); return; }
+  const locale = uiLang==="ja"?"ja-JP":uiLang==="en"?"en-US":"vi-VN";
+  list.unshift({ id:Date.now().toString(), text, extra:extra||"", translation:translation||"", savedAt:new Date().toLocaleString(locale) });
   saveLib(lib);
-  showToast(`✅ Đã lưu ${type==="sentence"?"câu":"từ"}!`, null, null);
+  showToast(type==="sentence"?t("toastSavedSentence"):t("toastSavedWord"), null, null);
 }
 function deleteItem(type, id) {
   const lib = loadLib(), key = type==="sentence"?"sentences":"words";
@@ -638,12 +792,12 @@ function openLibrary(tab) {
   ov.innerHTML = `
     <div class="lib-modal">
       <div class="lib-header">
-        <h3>📚 Danh sách học</h3>
+        <h3>${t("libTitle")}</h3>
         <button class="lib-close" onclick="this.closest('.lib-overlay').remove()">✕</button>
       </div>
       <div class="lib-tabs">
-        <button class="lib-tab ${libTab==="sentence"?"active":""}" onclick="switchLibTab('sentence',event)">💬 Câu (${lib.sentences.length})</button>
-        <button class="lib-tab ${libTab==="word"?"active":""}"     onclick="switchLibTab('word',event)">📝 Từ (${lib.words.length})</button>
+        <button class="lib-tab ${libTab==="sentence"?"active":""}" onclick="switchLibTab('sentence',event)">${t("libTabSentence")} (${lib.sentences.length})</button>
+        <button class="lib-tab ${libTab==="word"?"active":""}"     onclick="switchLibTab('word',event)">${t("libTabWord")} (${lib.words.length})</button>
       </div>
       <div class="lib-list" id="libList"></div>
     </div>
@@ -658,14 +812,14 @@ function switchLibTab(tab, e) {
   e.target.classList.add("active");
   renderLibrary();
   const lib = loadLib();
-  document.querySelectorAll(".lib-tab")[0].textContent = `💬 Câu (${lib.sentences.length})`;
-  document.querySelectorAll(".lib-tab")[1].textContent = `📝 Từ (${lib.words.length})`;
+  document.querySelectorAll(".lib-tab")[0].textContent = `${t("libTabSentence")} (${lib.sentences.length})`;
+  document.querySelectorAll(".lib-tab")[1].textContent = `${t("libTabWord")} (${lib.words.length})`;
 }
 function renderLibrary() {
   const list = document.getElementById("libList");
   if (!list) return;
   const items = libTab==="sentence" ? loadLib().sentences : loadLib().words;
-  if (!items.length) { list.innerHTML=`<div class="lib-empty">Chưa có ${libTab==="sentence"?"câu":"từ"} nào</div>`; return; }
+  if (!items.length) { list.innerHTML=`<div class="lib-empty">${libTab==="sentence"?t("libEmptySentence"):t("libEmptyWord")}</div>`; return; }
   list.innerHTML = items.map((i, idx) => {
     const safeText = i.text.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
     return `
@@ -706,7 +860,7 @@ function showToast(msg, existingId, type) {
   clearTimeout(toastTimer);
   const div = document.createElement("div");
   div.className = "toast";
-  div.innerHTML = msg + (existingId ? ` <button onclick="openLibrary('${type}');this.closest('.toast').remove()">Xem</button>` : "");
+  div.innerHTML = msg + (existingId ? ` <button onclick="openLibrary('${type}');this.closest('.toast').remove()">${t("toastView")}</button>` : "");
   document.body.appendChild(div);
   toastTimer = setTimeout(()=>div.remove(), 3000);
 }
@@ -714,20 +868,20 @@ function showToast(msg, existingId, type) {
 // ── Analysis ──────────────────────────────────────────────────────────────────
 function toggleAnalysis() {
   analysisOn = !analysisOn;
-  document.getElementById("analysisBtn").textContent = `🔍 Phân tích: ${analysisOn?"BẬT":"TẮT"}`;
+  document.getElementById("analysisBtn").textContent = analysisOn ? t("btnAnalysisOn") : t("btnAnalysisOff");
 }
 async function analyzeUserText(userText, wrapEl) {
   if (!analysisOn || !userText.trim()) return;
   const card = document.createElement("div");
   card.className = "analysis-card";
-  card.innerHTML = `<span style="color:#475569;font-style:italic;">⏳ Đang phân tích...</span>`;
+  card.innerHTML = `<span style="color:#475569;font-style:italic;">${t("analysisLoading")}</span>`;
   wrapEl.appendChild(card);
   document.getElementById("chatArea").scrollTop = 99999;
 
   try {
     const res  = await fetch(`${API_URL}/analyze`, {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ text:userText, level:document.getElementById("levelSelect").value })
+      body: JSON.stringify({ text:userText, level:document.getElementById("levelSelect").value, ui_lang: uiLang })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
@@ -750,9 +904,9 @@ async function analyzeUserText(userText, wrapEl) {
 
 // ── TTS ───────────────────────────────────────────────────────────────────────
 async function playTTS(text) {
-  if (!text) { setBusy(false); setStatus("Sẵn sàng!","idle"); return; }
+  if (!text) { setBusy(false); setStatus(t("statusReady"),"idle"); return; }
   lastTtsText = text;
-  setStatus("Sensei đang nói...", "speaking");
+  setStatus(t("statusSpeaking"), "speaking");
   try {
     const res = await fetch(`${API_URL}/tts`, {
       method:"POST", headers:{"Content-Type":"application/json"},
@@ -761,10 +915,10 @@ async function playTTS(text) {
     if (!res.ok) throw new Error((await res.json()).error);
     const url   = URL.createObjectURL(await res.blob());
     const audio = new Audio(url);
-    audio.onended = () => { URL.revokeObjectURL(url); setStatus("Sẵn sàng!","idle"); setBusy(false); document.getElementById("micHint").textContent="Nhấn để trả lời"; };
-    audio.onerror = () => { setStatus("Sẵn sàng!","idle"); setBusy(false); };
+    audio.onended = () => { URL.revokeObjectURL(url); setStatus(t("statusReady"),"idle"); setBusy(false); document.getElementById("micHint").textContent=t("micHintReply"); };
+    audio.onerror = () => { setStatus(t("statusReady"),"idle"); setBusy(false); };
     audio.play();
-  } catch(e) { setStatus(`TTS lỗi: ${e.message}`,"idle"); setBusy(false); }
+  } catch(e) { setStatus(`TTS: ${e.message}`,"idle"); setBusy(false); }
 }
 function replayTTS() { if (lastTtsText) playTTS(lastTtsText); }
 
@@ -775,11 +929,11 @@ async function askAI(userText) {
   const lastUserWrap = [...document.querySelectorAll(".bubble-wrap.user")].at(-1);
   analyzeUserText(userText, lastUserWrap);
   addTyping();
-  setStatus("Sensei đang suy nghĩ...", "thinking");
+  setStatus(t("statusThinking"), "thinking");
   try {
     const res  = await fetch(`${API_URL}/chat`, {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ history, level:document.getElementById("levelSelect").value })
+      body: JSON.stringify({ history, level:document.getElementById("levelSelect").value, ui_lang: uiLang })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error||`HTTP ${res.status}`);
@@ -790,7 +944,7 @@ async function askAI(userText) {
   } catch(e) {
     removeTyping();
     addAIBubble({ reply_text:`❌ ${e.message}`, tts_text:"" });
-    setStatus("Lỗi kết nối","idle"); setBusy(false);
+    setStatus(t("statusError"),"idle"); setBusy(false);
   }
 }
 
@@ -807,7 +961,7 @@ function sendText() {
 function toggleMic() { if(isBusy) return; isRecording ? stopMic() : startMic(); }
 function startMic() {
   const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-  if (!SR) { setStatus("Trình duyệt không hỗ trợ mic!","idle"); return; }
+  if (!SR) { setStatus(t("statusError"),"idle"); return; }
   recognition = new SR();
   recognition.lang = document.getElementById("srLangSelect").value;
   recognition.interimResults = true;
@@ -816,24 +970,24 @@ function startMic() {
     isRecording = true;
     document.getElementById("micBtn").classList.add("recording");
     document.getElementById("micBtn").textContent = "⏹";
-    document.getElementById("micHint").textContent = "Đang nghe...";
-    setStatus("Đang nghe...","idle");
+    document.getElementById("micHint").textContent = t("micHintListening");
+    setStatus(t("micHintListening"),"idle");
   };
   recognition.onresult = e => {
-    let t=""; for(let i=e.resultIndex;i<e.results.length;i++) t+=e.results[i][0].transcript;
-    document.getElementById("liveText").textContent = t;
+    let interim=""; for(let i=e.resultIndex;i<e.results.length;i++) interim+=e.results[i][0].transcript;
+    document.getElementById("liveText").textContent = interim;
   };
   recognition.onend = () => {
     isRecording = false;
     document.getElementById("micBtn").classList.remove("recording");
     document.getElementById("micBtn").textContent = "🎤";
-    document.getElementById("micHint").textContent = "Nhấn để nói";
-    const t = document.getElementById("liveText").textContent.trim();
+    document.getElementById("micHint").textContent = t("micHintReady");
+    const txt = document.getElementById("liveText").textContent.trim();
     document.getElementById("liveText").textContent = "";
-    if (t) { addUserBubble(t); askAI(t); }
-    else setStatus("Sẵn sàng!","idle");
+    if (txt) { addUserBubble(txt); askAI(txt); }
+    else setStatus(t("statusReady"),"idle");
   };
-  recognition.onerror = e => { setStatus(`Lỗi mic: ${e.error}`,"idle"); stopMic(); };
+  recognition.onerror = e => { setStatus(`${t("statusError")}: ${e.error}`,"idle"); stopMic(); };
   recognition.start();
 }
 function stopMic() {
@@ -843,10 +997,12 @@ function stopMic() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+applyLang();
+
 fetch(`${API_URL}/health`)
   .then(r=>r.json())
-  .then(()=>setStatus("Chọn ngữ cảnh để bắt đầu!","idle"))
-  .catch(()=>setStatus("⚠️ Không kết nối được backend","idle"));
+  .then(()=>setStatus(t("statusInit"),"idle"))
+  .catch(()=>setStatus(t("statusNoBackend"),"idle"));
 </script>
 </body>
 </html>
