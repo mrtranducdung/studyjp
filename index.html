@@ -103,6 +103,23 @@
   .word { cursor:pointer; border-radius:3px; transition:background .15s; }
   .word:hover { background:rgba(129,140,248,0.3); }
 
+  /* ── Float save bar (mobile-friendly) ── */
+  .float-save-bar {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    background: #1e1e35; border: 1px solid rgba(99,102,241,0.5);
+    border-radius: 20px; padding: 6px 6px; z-index: 1500;
+    display: flex; gap: 6px; align-items: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    animation: slideUp .2s ease;
+  }
+  .float-save-bar button {
+    border: none; border-radius: 14px; padding: 8px 16px;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  }
+  .float-save-bar .fsb-sentence { background: rgba(99,102,241,0.3); color: #a5b4fc; }
+  .float-save-bar .fsb-word     { background: rgba(99,102,241,0.15); color: #818cf8; }
+  .float-save-bar .fsb-close    { background: none; color: #475569; font-size: 0.9rem; padding: 8px 10px; }
+
   /* ── Save popup ── */
   .save-popup {
     position:fixed; z-index:999;
@@ -445,18 +462,61 @@ function addTyping() {
 function removeTyping() { document.getElementById("typingWrap")?.remove(); }
 
 // ── Interactive bubble ────────────────────────────────────────────────────────
-function makeInteractive(bubble, romaji, translation) {
-  bubble.addEventListener("mouseup", () => {
-    setTimeout(() => {
-      const sel  = window.getSelection();
-      const text = sel.toString().trim();
-      if (text.length > 0 && sel.rangeCount && bubble.contains(sel.getRangeAt(0).commonAncestorContainer)) {
-        const r = sel.getRangeAt(0).getBoundingClientRect();
-        showSavePopup(r.left, r.bottom + 4, text, romaji, translation);
-      }
-    }, 20);
-  });
+// Store romaji/translation per element so selectionchange can access them
+const _interactiveMap = new WeakMap();
+function makeInteractive(el, romaji, translation) {
+  el.dataset.interactive = "1";
+  _interactiveMap.set(el, { romaji, translation });
 }
+
+// Global selectionchange — works on both desktop and mobile
+let _selTimer = null;
+document.addEventListener("selectionchange", () => {
+  clearTimeout(_selTimer);
+  _selTimer = setTimeout(() => {
+    const sel  = window.getSelection();
+    const text = sel?.toString().trim();
+    if (!text) { hideFloatBar(); return; }
+    if (!sel.rangeCount) { hideFloatBar(); return; }
+    const node = sel.getRangeAt(0).commonAncestorContainer;
+    const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
+    if (!el) { hideFloatBar(); return; }
+    const { romaji, translation } = _interactiveMap.get(el) || {};
+    showFloatBar(text, romaji || "", translation || "");
+  }, 200);
+});
+
+let _floatBarEl = null;
+function showFloatBar(text, romaji, translation) {
+  hideFloatBar();
+  const bar = document.createElement("div");
+  bar.className = "float-save-bar";
+
+  const btnS = document.createElement("button");
+  btnS.className = "fsb-sentence"; btnS.textContent = "💬 Lưu câu";
+  btnS.onclick = () => { saveItem("sentence", text, romaji, translation); hideFloatBar(); window.getSelection()?.removeAllRanges(); };
+
+  const btnW = document.createElement("button");
+  btnW.className = "fsb-word"; btnW.textContent = "📝 Lưu từ";
+  btnW.onclick = async () => {
+    btnW.textContent = "⏳..."; btnW.disabled = true;
+    try {
+      const res  = await fetch(`${API_URL}/translate`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ word: text }) });
+      const data = await res.json();
+      saveItem("word", text, data.romaji||"", data.translation||"");
+    } catch { saveItem("word", text, "", ""); }
+    hideFloatBar(); window.getSelection()?.removeAllRanges();
+  };
+
+  const btnX = document.createElement("button");
+  btnX.className = "fsb-close"; btnX.textContent = "✕";
+  btnX.onclick = () => { hideFloatBar(); window.getSelection()?.removeAllRanges(); };
+
+  bar.appendChild(btnS); bar.appendChild(btnW); bar.appendChild(btnX);
+  document.body.appendChild(bar);
+  _floatBarEl = bar;
+}
+function hideFloatBar() { _floatBarEl?.remove(); _floatBarEl = null; }
 
 // ── Save popup ────────────────────────────────────────────────────────────────
 let popupEl = null;
@@ -642,16 +702,7 @@ async function analyzeUserText(userText, wrapEl) {
       if (data.romaji) html += `<div class="a-row"><span class="a-icon">📖</span><span style="color:#818cf8">${data.romaji}</span></div>`;
     }
     card.innerHTML = html;
-    card.addEventListener("mouseup", () => {
-      setTimeout(() => {
-        const sel  = window.getSelection();
-        const text = sel.toString().trim();
-        if (text.length > 0 && sel.rangeCount && card.contains(sel.getRangeAt(0).commonAncestorContainer)) {
-          const r = sel.getRangeAt(0).getBoundingClientRect();
-          showSavePopup(r.left, r.bottom + 4, text, "", "");
-        }
-      }, 20);
-    });
+    makeInteractive(card, "", "");
   } catch(e) { card.remove(); }
   document.getElementById("chatArea").scrollTop = 99999;
 }
