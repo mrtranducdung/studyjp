@@ -282,7 +282,6 @@
 <!-- Controls -->
 <div class="controls-row">
   <button class="btn-sm" onclick="toggleAnalysis()" id="analysisBtn">🔍 Phân tích: BẬT</button>
-  <button class="btn-sm" onclick="openShadowing()" id="btnShadowing">🎙 Shadowing</button>
   <button class="btn-sm" onclick="location.reload()" id="btnRestart">🔄 Bắt đầu lại</button>
 </div>
 
@@ -458,7 +457,7 @@ function applyLang() {
   const s = STRINGS[uiLang];
   const ids = ["labelLevel","labelVoice","labelMic","labelLang",
     "optBeginner","optElementary","optIntermediate","optAdvanced",
-    "optMicVi","optMicEn","optMicJa","btnLibrary","btnRestart","btnShadowing","sendBtn"];
+    "optMicVi","optMicEn","optMicJa","btnLibrary","btnRestart","sendBtn"];
   for (const id of ids) { const el=document.getElementById(id); if(el) el.textContent=s[id]; }
   document.getElementById("analysisBtn").textContent = analysisOn ? s.btnAnalysisOn : s.btnAnalysisOff;
   document.getElementById("textInput").placeholder = s.inputPlaceholder;
