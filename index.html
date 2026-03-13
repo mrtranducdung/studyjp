@@ -460,6 +460,7 @@ function applyLang() {
 function onLangChange() {
   uiLang = document.getElementById("langSelect").value;
   applyLang();
+  if (document.querySelector(".lib-overlay")) renderLibrary();
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────
@@ -778,7 +779,7 @@ function saveItem(type, text, extra, translation) {
   const exists = list.find(i=>i.text===text);
   if (exists) { showToast(t("toastExists"), exists.id, type); return; }
   const locale = uiLang==="ja"?"ja-JP":uiLang==="en"?"en-US":"vi-VN";
-  list.unshift({ id:Date.now().toString(), text, extra:extra||"", translation:translation||"", savedAt:new Date().toLocaleString(locale) });
+  list.unshift({ id:Date.now().toString(), text, extra:extra||"", translation:translation||"", lang:uiLang, savedAt:new Date().toLocaleString(locale) });
   saveLib(lib);
   showToast(type==="sentence"?t("toastSavedSentence"):t("toastSavedWord"), null, null);
 }
@@ -819,20 +820,24 @@ function switchLibTab(tab, e) {
   document.querySelectorAll(".lib-tab")[0].textContent = `${t("libTabSentence")} (${lib.sentences.length})`;
   document.querySelectorAll(".lib-tab")[1].textContent = `${t("libTabWord")} (${lib.words.length})`;
 }
-function renderLibrary() {
+async function renderLibrary() {
   const list = document.getElementById("libList");
   if (!list) return;
   const items = libTab==="sentence" ? loadLib().sentences : loadLib().words;
   if (!items.length) { list.innerHTML=`<div class="lib-empty">${libTab==="sentence"?t("libEmptySentence"):t("libEmptyWord")}</div>`; return; }
   list.innerHTML = items.map((i, idx) => {
     const safeText = i.text.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    const needsRetrans = i.text && (!i.lang || i.lang !== uiLang);
+    const transHtml = i.translation
+      ? `<div class="li-meta li-trans" id="litrans_${i.id}">${needsRetrans?"⏳...":langFlag()+" "+i.translation}</div>`
+      : (needsRetrans ? `<div class="li-meta li-trans" id="litrans_${i.id}">⏳...</div>` : "");
     return `
     <div class="lib-item" id="libitem_${i.id}">
       <div style="font-size:0.7rem;color:#334155;font-weight:700;min-width:22px;padding-top:2px;">${idx+1}.</div>
       <div style="flex:1">
         <div class="li-text">${i.text}</div>
         ${i.extra?`<div class="li-meta">📖 ${i.extra}</div>`:""}
-        ${i.translation?`<div class="li-meta">${langFlag()} ${i.translation}</div>`:""}
+        ${transHtml}
         <div class="li-meta">🕐 ${i.savedAt}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
@@ -841,6 +846,28 @@ function renderLibrary() {
       </div>
     </div>`;
   }).join("");
+
+  // Re-translate items that don't match current language
+  const needRetrans = items.filter(i => i.text && (!i.lang || i.lang !== uiLang));
+  for (const item of needRetrans) {
+    const el = document.getElementById(`litrans_${item.id}`);
+    if (!el) continue;
+    try {
+      const res  = await fetch(`${API_URL}/translate`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ word: item.text, ui_lang: uiLang })
+      });
+      const data = await res.json();
+      if (data.translation) {
+        el.textContent = `${langFlag()} ${data.translation}`;
+        // Persist the retranslated value
+        const lib  = loadLib();
+        const arr  = libTab==="sentence" ? lib.sentences : lib.words;
+        const stored = arr.find(x=>x.id===item.id);
+        if (stored) { stored.translation = data.translation; stored.lang = uiLang; saveLib(lib); }
+      }
+    } catch { el.textContent = ""; }
+  }
 }
 
 async function playLibTTS(text) {
