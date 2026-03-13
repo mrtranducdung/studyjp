@@ -483,27 +483,29 @@ function makeInteractive(el, romaji, translation) {
   _interactiveMap.set(el, { romaji, translation });
 }
 
-// Track selection state — hide bar while user is actively selecting
-let _pendingSel = null;
+// _lifted = true right after finger/mouse lifts, reset after bar is shown
+let _lifted = false;
+document.addEventListener("touchend", () => { _lifted = true; });
+document.addEventListener("mouseup",  () => { _lifted = true; });
 
 document.addEventListener("selectionchange", () => {
-  hideFloatBar();  // hide while selection is changing
-  const sel = window.getSelection();
+  const sel  = window.getSelection();
   const text = sel?.toString().trim();
-  if (!text || !sel.rangeCount) { _pendingSel = null; return; }
+
+  if (!text || !sel.rangeCount) { hideFloatBar(); _lifted = false; return; }
+
+  // While actively dragging (not yet lifted), keep bar hidden
+  if (!_lifted) { hideFloatBar(); return; }
+
   const node = sel.getRangeAt(0).commonAncestorContainer;
   const el   = (node.nodeType === 3 ? node.parentElement : node).closest("[data-interactive]");
-  if (!el) { _pendingSel = null; return; }
-  const { romaji, translation } = _interactiveMap.get(el) || {};
-  _pendingSel = { text, romaji: romaji||"", translation: translation||"", rect: sel.getRangeAt(0).getBoundingClientRect() };
-});
+  if (!el) { hideFloatBar(); _lifted = false; return; }
 
-// Show bar only when finger/mouse is lifted
-function _tryShowBar() {
-  if (_pendingSel) showFloatBar(_pendingSel.text, _pendingSel.romaji, _pendingSel.translation, _pendingSel.rect);
-}
-document.addEventListener("touchend",  () => setTimeout(_tryShowBar, 100));
-document.addEventListener("mouseup",   () => setTimeout(_tryShowBar, 50));
+  const { romaji, translation } = _interactiveMap.get(el) || {};
+  const rect = sel.getRangeAt(0).getBoundingClientRect();
+  _lifted = false;
+  showFloatBar(text, romaji||"", translation||"", rect);
+});
 
 let _floatBarEl = null;
 function showFloatBar(text, romaji, translation, rect) {
