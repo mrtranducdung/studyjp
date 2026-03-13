@@ -432,6 +432,7 @@ const STRINGS = {
 };
 
 function t(key) { return STRINGS[uiLang][key] ?? key; }
+function langFlag() { return uiLang==="en"?"🇬🇧":uiLang==="ja"?"🇯🇵":"🇻🇳"; }
 
 function applyLang() {
   const s = STRINGS[uiLang];
@@ -451,6 +452,9 @@ function applyLang() {
   if (grid) grid.innerHTML = s.ctx.map(c=>
     `<div class="ctx-card" onclick="selectContext(this,'${c.emoji} ${c.name}','${c.prompt.replace(/'/g,"\\'")}')">
       ${c.emoji}<br>${c.name}</div>`).join("");
+  // Update status text if still in setup phase
+  if (document.getElementById("setupScreen"))
+    setStatus(s.statusInit);
 }
 
 function onLangChange() {
@@ -597,7 +601,7 @@ function addAIBubble(data) {
   card.innerHTML = `
     <div class="jt">${data.tts_text || data.reply_text || ""}</div>
     ${data.romaji?`<div class="jr">📖 ${data.romaji}</div>`:""}
-    ${data.translation?`<div class="jm">🇻🇳 ${data.translation}</div>`:""}
+    ${data.translation?`<div class="jm">${langFlag()} ${data.translation}</div>`:""}
     <button class="jbtn" onclick="replayTTS()">${t("replayBtn")}</button>
   `;
   wrap.appendChild(card);
@@ -828,7 +832,7 @@ function renderLibrary() {
       <div style="flex:1">
         <div class="li-text">${i.text}</div>
         ${i.extra?`<div class="li-meta">📖 ${i.extra}</div>`:""}
-        ${i.translation?`<div class="li-meta">🇻🇳 ${i.translation}</div>`:""}
+        ${i.translation?`<div class="li-meta">${langFlag()} ${i.translation}</div>`:""}
         <div class="li-meta">🕐 ${i.savedAt}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
