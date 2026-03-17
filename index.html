@@ -233,14 +233,6 @@
     </select>
   </div>
   <div class="setting-group">
-    <label id="labelMic">🗣 Mic</label>
-    <select id="srLangSelect">
-      <option value="vi-VN" id="optMicVi">Tiếng Việt</option>
-      <option value="en-US" id="optMicEn">Tiếng Anh</option>
-      <option value="ja-JP" id="optMicJa" selected>Tiếng Nhật</option>
-    </select>
-  </div>
-  <div class="setting-group">
     <label id="labelLang">🌐 Ngôn ngữ</label>
     <select id="langSelect" onchange="onLangChange()">
       <option value="vi">🇻🇳 Tiếng Việt</option>
@@ -310,7 +302,7 @@
 
 const API_URL = "https://mistral-backend-vzcs.onrender.com";
 
-let history = [], isBusy = false, isRecording = false, recognition = null;
+let history = [], isBusy = false, isRecording = false, mediaRecorder = null, audioChunks = [];
 let lastTtsText = "", analysisOn = true, libTab = "sentence";
 let uiLang = "en";
 
@@ -1218,43 +1210,45 @@ function sendText() {
   askAI(text);
 }
 
-// ── Speech Recognition ────────────────────────────────────────────────────────
+// ── Speech Recognition (ElevenLabs STT) ──────────────────────────────────────
 function toggleMic() { if(isBusy) return; isRecording ? stopMic() : startMic(); }
-function startMic() {
-  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-  if (!SR) { setStatus(t("statusError"),"idle"); return; }
-  recognition = new SR();
-  recognition.lang = document.getElementById("srLangSelect").value;
-  recognition.interimResults = true;
-  recognition.continuous = false;
-  recognition.onstart = () => {
-    isRecording = true;
-    document.getElementById("micBtn").classList.add("recording");
-    document.getElementById("micBtn").textContent = "⏹";
-    document.getElementById("micHint").textContent = t("micHintListening");
-    setStatus(t("micHintListening"),"idle");
-  };
-  recognition.onresult = e => {
-    let interim=""; for(let i=e.resultIndex;i<e.results.length;i++) interim+=e.results[i][0].transcript;
-    document.getElementById("liveText").textContent = interim;
-  };
-  recognition.onend = () => {
-    isRecording = false;
-    document.getElementById("micBtn").classList.remove("recording");
-    document.getElementById("micBtn").textContent = "🎤";
-    document.getElementById("micHint").textContent = t("micHintReady");
-    const txt = document.getElementById("liveText").textContent.trim();
+async function startMic() {
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { setStatus(t("statusError") + ": mic", "idle"); return; }
+
+  audioChunks = [];
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+  mediaRecorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
     document.getElementById("liveText").textContent = "";
-    if (txt) { addUserBubble(txt); askAI(txt); }
-    else setStatus(t("statusReady"),"idle");
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
+    setStatus(t("micHintListening"), "idle");
+    try {
+      const form = new FormData();
+      form.append("file", blob, "audio.webm");
+      const res = await fetch(`${API_URL}/stt`, { method: "POST", body: form });
+      const data = await res.json();
+      const txt = data.text?.trim();
+      if (txt) { addUserBubble(txt); askAI(txt); }
+      else setStatus(t("statusReady"), "idle");
+    } catch(e) { setStatus(t("statusError") + ": STT", "idle"); }
   };
-  recognition.onerror = e => { setStatus(`${t("statusError")}: ${e.error}`,"idle"); stopMic(); };
-  recognition.start();
+
+  isRecording = true;
+  mediaRecorder.start();
+  document.getElementById("micBtn").classList.add("recording");
+  document.getElementById("micBtn").textContent = "⏹";
+  document.getElementById("micHint").textContent = t("micHintListening");
+  setStatus(t("micHintListening"), "idle");
 }
 function stopMic() {
-  recognition?.stop(); isRecording=false;
+  mediaRecorder?.stop();
+  isRecording = false;
   document.getElementById("micBtn").classList.remove("recording");
-  document.getElementById("micBtn").textContent="🎤";
+  document.getElementById("micBtn").textContent = "🎤";
+  document.getElementById("micHint").textContent = t("micHintReady");
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
