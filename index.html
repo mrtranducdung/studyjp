@@ -390,6 +390,12 @@
   <button class="um-btn danger" onclick="closeUserMenu();logout()">🚪 Đăng xuất</button>
 </div>
 
+<!-- Library / Review row -->
+<div class="controls-row" style="margin-bottom:16px;">
+  <button class="btn-sm" id="btnLibrary" onclick="openLibrary()">📚 Danh sách học</button>
+  <button class="btn-sm" id="btnReview" onclick="startReview()" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);">🔁 Review</button>
+</div>
+
 <!-- Teacher -->
 <div class="teacher-area">
   <div class="avatar-ring" id="avatarRing">👩‍🏫</div>
@@ -418,8 +424,6 @@
 <!-- Controls -->
 <div class="controls-row">
   <button class="btn-sm" onclick="toggleAnalysis()" id="analysisBtn">🔍 Phân tích: BẬT</button>
-  <button class="btn-sm" id="btnLibrary" onclick="openLibrary()">📚 Danh sách học</button>
-  <button class="btn-sm" id="btnReview" onclick="startReview()" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);">🔁 Review</button>
   <button class="btn-sm" onclick="location.reload()" id="btnRestart">🔄 Bắt đầu lại</button>
 </div>
 
