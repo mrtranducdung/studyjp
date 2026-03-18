@@ -369,14 +369,6 @@
       <option value="ja">🇯🇵 JP</option>
     </select>
   </div>
-  <div class="setting-group">
-    <label id="labelMic">🗣 Mic</label>
-    <select id="srLangSelect">
-      <option value="vi-VN" id="optMicVi">Tiếng Việt</option>
-      <option value="en-US" id="optMicEn">Tiếng Anh</option>
-      <option value="ja-JP" id="optMicJa" selected>Tiếng Nhật</option>
-    </select>
-  </div>
   <div class="navbar-right">
     <button class="user-btn" id="userBtn" onclick="toggleUserMenu()"></button>
   </div>
@@ -433,6 +425,11 @@
 <div class="controls-row">
   <button class="btn-sm" onclick="toggleAnalysis()" id="analysisBtn">🔍 Phân tích: BẬT</button>
   <button class="btn-sm" onclick="location.reload()" id="btnRestart">🔄 Bắt đầu lại</button>
+  <select id="srLangSelect" class="btn-sm" style="cursor:pointer">
+    <option value="vi-VN" id="optMicVi">🗣 Việt</option>
+    <option value="en-US" id="optMicEn">🗣 EN</option>
+    <option value="ja-JP" id="optMicJa" selected>🗣 JP</option>
+  </select>
 </div>
 
 <!-- Mic -->
