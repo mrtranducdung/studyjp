@@ -1564,10 +1564,37 @@ async function startMic() {
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
   catch { setStatus(t("statusError") + ": mic", "idle"); return; }
 
+  // Silence detection (RMS on time domain)
+  const audioCtx = new AudioContext();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  source.connect(analyser);
+  const timeDomain = new Float32Array(analyser.fftSize);
+  const SILENCE_THRESHOLD = 0.01;
+  const SILENCE_DURATION  = 1500;
+  let silenceTimer = null;
+  let vadActive = false; // chỉ auto-stop sau khi đã phát hiện có tiếng nói
+
+  const checkSilence = () => {
+    if (!isRecording) return;
+    analyser.getFloatTimeDomainData(timeDomain);
+    const rms = Math.sqrt(timeDomain.reduce((s, v) => s + v * v, 0) / timeDomain.length);
+    if (rms > SILENCE_THRESHOLD) {
+      vadActive = true;
+      clearTimeout(silenceTimer); silenceTimer = null;
+    } else if (vadActive) {
+      if (!silenceTimer) silenceTimer = setTimeout(() => { if (isRecording) stopMic(); }, SILENCE_DURATION);
+    }
+    requestAnimationFrame(checkSilence);
+  };
+
   audioChunks = [];
   mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
   mediaRecorder.onstop = async () => {
+    clearTimeout(silenceTimer);
+    audioCtx.close();
     stream.getTracks().forEach(t => t.stop());
     document.getElementById("liveText").textContent = "";
     const blob = new Blob(audioChunks, { type: "audio/webm" });
@@ -1591,6 +1618,7 @@ async function startMic() {
 
   isRecording = true;
   mediaRecorder.start();
+  requestAnimationFrame(checkSilence);
   document.getElementById("micBtn").classList.add("recording");
   document.getElementById("micBtn").textContent = "⏹";
   document.getElementById("micHint").textContent = t("micHintListening");
