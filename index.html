@@ -1535,7 +1535,11 @@ function stopMic() {
 
 function startFallbackMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { setStatus("Vui lòng gõ phím (STT miễn phí không khả dụng)", "idle"); return; }
+  if (!SR) {
+    showToast("⚠️ Trình duyệt không hỗ trợ mic miễn phí. Dùng Chrome hoặc gõ phím.");
+    setStatus("Gõ phím để tiếp tục", "idle");
+    return;
+  }
   fallbackRecognition = new SR();
   fallbackRecognition.lang = "ja-JP";
   fallbackRecognition.interimResults = true;
@@ -1559,7 +1563,18 @@ function startFallbackMic() {
     if (txt) { addUserBubble(txt); askAI(txt); }
     else setStatus(t("statusReady"), "idle");
   };
-  fallbackRecognition.onerror = () => { stopMic(); };
+  fallbackRecognition.onerror = e => {
+    stopMic();
+    const msgs = {
+      "not-allowed":    "⚠️ Bị chặn mic. Cho phép microphone trong cài đặt trình duyệt.",
+      "audio-capture":  "⚠️ Không tìm thấy microphone.",
+      "network":        "⚠️ Lỗi mạng khi nhận dạng giọng nói.",
+      "no-speech":      "⚠️ Không nghe thấy gì. Thử lại.",
+      "aborted":        null,
+    };
+    const msg = msgs[e.error];
+    if (msg) showToast(msg);
+  };
   fallbackRecognition.start();
 }
 
