@@ -425,11 +425,14 @@
 <div class="controls-row">
   <button class="btn-sm" onclick="toggleAnalysis()" id="analysisBtn">🔍 Phân tích: BẬT</button>
   <button class="btn-sm" onclick="location.reload()" id="btnRestart">🔄 Bắt đầu lại</button>
-  <select id="srLangSelect" class="btn-sm" style="cursor:pointer">
-    <option value="vi-VN" id="optMicVi">🗣 Việt</option>
-    <option value="en-US" id="optMicEn">🗣 EN</option>
-    <option value="ja-JP" id="optMicJa" selected>🗣 JP</option>
-  </select>
+  <label style="display:flex;align-items:center;gap:4px;font-size:0.78rem;color:#94a3b8;cursor:pointer;">
+    🎙
+    <select id="srLangSelect" class="btn-sm" style="cursor:pointer">
+      <option value="vi-VN" id="optMicVi">Việt</option>
+      <option value="en-US" id="optMicEn">EN</option>
+      <option value="ja-JP" id="optMicJa" selected>JP</option>
+    </select>
+  </label>
 </div>
 
 <!-- Mic -->
