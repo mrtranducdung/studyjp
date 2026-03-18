@@ -369,6 +369,14 @@
       <option value="ja">🇯🇵 JP</option>
     </select>
   </div>
+  <div class="setting-group">
+    <label id="labelMic">🗣 Mic</label>
+    <select id="srLangSelect">
+      <option value="vi-VN" id="optMicVi">Tiếng Việt</option>
+      <option value="en-US" id="optMicEn">Tiếng Anh</option>
+      <option value="ja-JP" id="optMicJa" selected>Tiếng Nhật</option>
+    </select>
+  </div>
   <div class="navbar-right">
     <button class="user-btn" id="userBtn" onclick="toggleUserMenu()"></button>
   </div>
@@ -1557,29 +1565,52 @@ function sendText() {
 // ── Speech Recognition ────────────────────────────────────────────────────────
 function toggleMic() { if(isBusy) return; isRecording ? stopMic() : startMic(); }
 
+// Cached mic resources — reused across sessions for instant start
+let _micStream = null, _micAudioCtx = null, _micAnalyser = null, _micTimeDomain = null;
+
+async function _initMic() {
+  if (_micStream?.active) {
+    if (_micAudioCtx.state === "suspended") await _micAudioCtx.resume();
+    return true;
+  }
+  try {
+    _micStream    = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _micAudioCtx  = new AudioContext();
+    _micAnalyser  = _micAudioCtx.createAnalyser();
+    _micAnalyser.fftSize = 2048;
+    _micAudioCtx.createMediaStreamSource(_micStream).connect(_micAnalyser);
+    _micTimeDomain = new Float32Array(_micAnalyser.fftSize);
+    return true;
+  } catch { return false; }
+}
+
 async function startMic() {
   if (isFallbackMode) { startFallbackMic(); return; }
 
-  let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-  catch { setStatus(t("statusError") + ": mic", "idle"); return; }
+  // Show recording UI immediately for zero perceived delay
+  isRecording = true;
+  document.getElementById("micBtn").classList.add("recording");
+  document.getElementById("micBtn").textContent = "⏹";
+  document.getElementById("micHint").textContent = t("micHintListening");
+  setStatus(t("micHintListening"), "idle");
 
-  // Silence detection (RMS on time domain)
-  const audioCtx = new AudioContext();
-  const source = audioCtx.createMediaStreamSource(stream);
-  const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 2048;
-  source.connect(analyser);
-  const timeDomain = new Float32Array(analyser.fftSize);
+  if (!(await _initMic())) {
+    isRecording = false;
+    document.getElementById("micBtn").classList.remove("recording");
+    document.getElementById("micBtn").textContent = "🎤";
+    setStatus(t("statusError") + ": mic", "idle");
+    return;
+  }
+
   const SILENCE_THRESHOLD = 0.01;
   const SILENCE_DURATION  = 1500;
   let silenceTimer = null;
-  let vadActive = false; // chỉ auto-stop sau khi đã phát hiện có tiếng nói
+  let vadActive = false;
 
   const checkSilence = () => {
     if (!isRecording) return;
-    analyser.getFloatTimeDomainData(timeDomain);
-    const rms = Math.sqrt(timeDomain.reduce((s, v) => s + v * v, 0) / timeDomain.length);
+    _micAnalyser.getFloatTimeDomainData(_micTimeDomain);
+    const rms = Math.sqrt(_micTimeDomain.reduce((s, v) => s + v * v, 0) / _micTimeDomain.length);
     if (rms > SILENCE_THRESHOLD) {
       vadActive = true;
       clearTimeout(silenceTimer); silenceTimer = null;
@@ -1590,18 +1621,19 @@ async function startMic() {
   };
 
   audioChunks = [];
-  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder = new MediaRecorder(_micStream);
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
   mediaRecorder.onstop = async () => {
     clearTimeout(silenceTimer);
-    audioCtx.close();
-    stream.getTracks().forEach(t => t.stop());
     document.getElementById("liveText").textContent = "";
     const blob = new Blob(audioChunks, { type: "audio/webm" });
     setStatus(t("micHintListening"), "idle");
     try {
+      const srLang = document.getElementById("srLangSelect")?.value ?? "ja-JP";
+      const langCode = srLang.split("-")[0]; // "ja-JP" → "ja"
       const form = new FormData();
       form.append("file", blob, "audio.webm");
+      form.append("lang", langCode);
       const res = await authFetch(`${API_URL}/stt`, { method: "POST", body: form });
       if (res.status === 402) {
         isFallbackMode = true; updateUsageBar(); showPayModal();
@@ -1616,13 +1648,8 @@ async function startMic() {
     } catch(e) { setStatus(t("statusError") + ": STT", "idle"); }
   };
 
-  isRecording = true;
   mediaRecorder.start();
   requestAnimationFrame(checkSilence);
-  document.getElementById("micBtn").classList.add("recording");
-  document.getElementById("micBtn").textContent = "⏹";
-  document.getElementById("micHint").textContent = t("micHintListening");
-  setStatus(t("micHintListening"), "idle");
 }
 
 function stopMic() {
