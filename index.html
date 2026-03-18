@@ -817,8 +817,8 @@ function onLangChange() {
 // ── Settings ──────────────────────────────────────────────────────────────────
 function onSettingChange() {
   const v = document.getElementById("voiceSelect").value;
-  const male = v === "jm_kumo";
-  document.getElementById("teacherName").textContent = male ? "Sensei Kenji" : "Sensei Yuki";
+  const male = v === "otani";
+  document.getElementById("teacherName").textContent = male ? "Sensei Otani" : v === "sakura" ? "Sensei Sakura" : "Sensei Yuki";
   document.getElementById("avatarRing").textContent  = male ? "👨‍🏫" : "👩‍🏫";
 }
 
@@ -938,8 +938,9 @@ Your role as Sensei:
     method: "POST", headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ history, level: document.getElementById("levelSelect").value, ui_lang: uiLang })
   })
-  .then(r => r.json())
-  .then(data => {
+  .then(async r => {
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     removeTyping();
     history.push({ role: "assistant", content: JSON.stringify(data) });
     addAIBubble(data);
@@ -972,8 +973,9 @@ function startSession(label, contextPrompt) {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ history, level: document.getElementById("levelSelect").value, ui_lang: uiLang })
   })
-  .then(r=>r.json())
-  .then(data => {
+  .then(async r => {
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     removeTyping();
     history.push({ role:"assistant", content:JSON.stringify(data) });
     addAIBubble(data);
