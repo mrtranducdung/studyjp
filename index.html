@@ -1565,16 +1565,12 @@ async function startMic() {
   catch { setStatus(t("statusError") + ": mic", "idle"); return; }
 
   audioChunks = [];
-  const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-    ? "audio/webm;codecs=opus"
-    : MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
-  mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+  mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
     document.getElementById("liveText").textContent = "";
-    if (!audioChunks.length) { setStatus(t("statusReady"), "idle"); return; }
-    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
     setStatus(t("micHintListening"), "idle");
     try {
       const form = new FormData();
@@ -1594,7 +1590,7 @@ async function startMic() {
   };
 
   isRecording = true;
-  mediaRecorder.start(250); // flush chunks every 250ms
+  mediaRecorder.start();
   document.getElementById("micBtn").classList.add("recording");
   document.getElementById("micBtn").textContent = "⏹";
   document.getElementById("micHint").textContent = t("micHintListening");
