@@ -209,9 +209,89 @@
   .role-chip { padding:5px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#94a3b8; font-size:0.78rem; cursor:pointer; transition:all .2s; }
   .role-chip:hover{background:rgba(99,102,241,0.15);border-color:#6366f1;color:#e2e8f0;}
   .role-chip.selected{background:rgba(99,102,241,0.3);border-color:#818cf8;color:#e2e8f0;}
+
+  /* ── Auth modal ── */
+  .auth-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .auth-modal { background:#16162a; border:1px solid rgba(99,102,241,0.35); border-radius:20px; width:100%; max-width:360px; padding:28px 24px; display:flex; flex-direction:column; gap:18px; }
+  .auth-modal h2 { font-size:1.3rem; font-weight:700; text-align:center; }
+  .auth-modal p { font-size:0.8rem; color:#64748b; text-align:center; }
+  .auth-tabs { display:flex; gap:0; border:1px solid rgba(255,255,255,0.12); border-radius:12px; overflow:hidden; }
+  .auth-tab { flex:1; padding:9px; border:none; background:transparent; color:#64748b; font-size:0.85rem; cursor:pointer; transition:all .2s; }
+  .auth-tab.active { background:rgba(99,102,241,0.3); color:#a5b4fc; font-weight:600; }
+  .auth-input { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:11px 14px; color:#fff; font-size:0.88rem; outline:none; width:100%; }
+  .auth-input:focus { border-color:#6366f1; }
+  .auth-input::placeholder { color:#334155; }
+  .auth-submit { padding:12px; border-radius:12px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; width:100%; }
+  .auth-submit:disabled { opacity:0.5; cursor:not-allowed; }
+  .auth-error { font-size:0.8rem; color:#f87171; text-align:center; min-height:18px; }
+
+  /* ── Usage bar ── */
+  .usage-wrap { width:100%; max-width:500px; margin-bottom:16px; display:flex; flex-direction:column; gap:6px; }
+  .usage-row { display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#475569; }
+  .usage-track { height:4px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+  .usage-fill { height:100%; background:linear-gradient(90deg,#22c55e,#6366f1); border-radius:4px; transition:width .5s ease; }
+  .usage-fill.warn { background:linear-gradient(90deg,#f59e0b,#ef4444); }
+  .usage-fill.full { background:#ef4444; }
+  .usage-top { display:flex; justify-content:space-between; align-items:center; }
+  .usage-user { font-size:0.72rem; color:#334155; cursor:pointer; }
+  .usage-user:hover { color:#64748b; }
+  .upgrade-btn { font-size:0.7rem; padding:3px 10px; border-radius:8px; border:1px solid rgba(245,158,11,0.5); background:rgba(245,158,11,0.1); color:#f59e0b; cursor:pointer; }
+  .upgrade-btn:hover { background:rgba(245,158,11,0.2); }
+  .fallback-badge { font-size:0.7rem; padding:2px 8px; border-radius:8px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; }
+
+  /* ── Payment modal ── */
+  .pay-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .pay-modal { background:#16162a; border:1px solid rgba(245,158,11,0.3); border-radius:20px; width:100%; max-width:380px; padding:28px 24px; display:flex; flex-direction:column; gap:16px; }
+  .pay-modal h2 { font-size:1.2rem; font-weight:700; text-align:center; }
+  .pay-modal .pay-limit { font-size:0.82rem; color:#f87171; text-align:center; background:rgba(239,68,68,0.1); border-radius:10px; padding:10px; }
+  .pay-modal ul { font-size:0.82rem; color:#94a3b8; list-style:none; display:flex; flex-direction:column; gap:6px; }
+  .pay-modal ul li::before { content:"✓ "; color:#22c55e; font-weight:700; }
+  .pay-modal .pay-price { font-size:1.4rem; font-weight:700; text-align:center; color:#a5b4fc; }
+  .pay-modal .pay-price span { font-size:0.8rem; color:#475569; font-weight:400; }
+  .pay-btn { padding:12px; border-radius:12px; border:none; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; width:100%; }
+  .pay-test-btn { padding:10px; border-radius:12px; border:1px solid rgba(99,102,241,0.4); background:rgba(99,102,241,0.1); color:#818cf8; font-size:0.82rem; cursor:pointer; width:100%; }
+  .pay-test-btn:hover { background:rgba(99,102,241,0.2); }
+  .pay-close { background:none; border:none; color:#475569; font-size:0.8rem; cursor:pointer; text-align:center; width:100%; }
+  .pay-close:hover { color:#94a3b8; }
 </style>
 </head>
 <body>
+
+<!-- Auth modal -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <h2>🇯🇵 Học Tiếng Nhật</h2>
+    <p>Đăng ký miễn phí để bắt đầu</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Đăng nhập</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Đăng ký</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input class="auth-input" type="email" id="authEmail" placeholder="Email" />
+      <input class="auth-input" type="password" id="authPassword" placeholder="Mật khẩu (min 6 ký tự)" />
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <button class="auth-submit" id="authSubmit" onclick="submitAuth()">Đăng nhập</button>
+  </div>
+</div>
+
+<!-- Payment modal -->
+<div class="pay-overlay" id="payOverlay" style="display:none;">
+  <div class="pay-modal">
+    <h2>⭐ Nâng cấp Premium</h2>
+    <div class="pay-limit" id="payLimitText">Bạn đã dùng hết 10 phút miễn phí hôm nay.</div>
+    <ul>
+      <li>Không giới hạn hội thoại</li>
+      <li>ElevenLabs TTS chất lượng cao</li>
+      <li>ElevenLabs STT nhận dạng chuẩn</li>
+      <li>Không quảng cáo</li>
+    </ul>
+    <div class="pay-price">$5 <span>/ tháng</span></div>
+    <button class="pay-btn" onclick="alert('Thanh toán sẽ được tích hợp sớm!')">💳 Thanh toán ngay</button>
+    <button class="pay-test-btn" onclick="activatePayment()">🧪 Đã thanh toán (test)</button>
+    <button class="pay-close" onclick="closePayModal()">Tiếp tục với giọng nói miễn phí</button>
+  </div>
+</div>
 
 <!-- Settings -->
 <div class="settings">
@@ -246,6 +326,22 @@
       <button class="btn-sm" id="btnLibrary" onclick="openLibrary()">📚 Danh sách học</button>
       <button class="btn-sm" id="btnReview" onclick="startReview()" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);">🔁 Review</button>
     </div>
+  </div>
+</div>
+
+<!-- Usage bar -->
+<div class="usage-wrap" id="usageWrap" style="display:none;">
+  <div class="usage-top">
+    <span class="usage-user" id="usageUserEmail" onclick="logout()">logout</span>
+    <span id="usageFallbackBadge" class="fallback-badge" style="display:none;">Chế độ miễn phí</span>
+    <button class="upgrade-btn" id="upgradeBtn" onclick="showPayModal()" style="display:none;">⭐ Nâng cấp</button>
+  </div>
+  <div class="usage-row">
+    <span id="usageText">0:00 / 10:00 hôm nay</span>
+    <span id="premiumBadge" style="display:none;font-size:0.7rem;color:#22c55e;">⭐ Premium</span>
+  </div>
+  <div class="usage-track" id="usageTrack" style="display:none;">
+    <div class="usage-fill" id="usageFill" style="width:0%"></div>
   </div>
 </div>
 
@@ -305,6 +401,166 @@ const API_URL = "https://mistral-backend-vzcs.onrender.com";
 let history = [], isBusy = false, isRecording = false, mediaRecorder = null, audioChunks = [];
 let lastTtsText = "", analysisOn = true, libTab = "sentence";
 let uiLang = "en";
+let authToken = localStorage.getItem("auth_token") ?? null;
+let currentUser = null;
+let dailyUsage = { used: 0, limit: 600 };
+let isFallbackMode = false;
+let fallbackRecognition = null;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function authFetch(url, options = {}) {
+  const headers = { ...(options.headers ?? {}) };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) { logout(); return res; }
+  return res;
+}
+
+function switchAuthTab(tab) {
+  document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+  document.getElementById("tabRegister").classList.toggle("active", tab === "register");
+  document.getElementById("authSubmit").textContent = tab === "login" ? "Đăng nhập" : "Đăng ký";
+  document.getElementById("authError").textContent = "";
+  document.getElementById("authSubmit").dataset.mode = tab;
+}
+
+async function submitAuth() {
+  const mode = document.getElementById("authSubmit").dataset.mode ?? "login";
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const errEl = document.getElementById("authError");
+  const btn = document.getElementById("authSubmit");
+
+  if (!email || !password) { errEl.textContent = "Vui lòng nhập email và mật khẩu."; return; }
+
+  btn.disabled = true;
+  btn.textContent = "...";
+  errEl.textContent = "";
+
+  try {
+    const res = await fetch(`${API_URL}/auth/${mode}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error ?? "Lỗi. Thử lại."; return; }
+    authToken = data.token;
+    localStorage.setItem("auth_token", authToken);
+    currentUser = data.user;
+    document.getElementById("authOverlay").style.display = "none";
+    onAuthSuccess();
+  } catch { errEl.textContent = "Lỗi kết nối."; }
+  finally { btn.disabled = false; btn.textContent = mode === "login" ? "Đăng nhập" : "Đăng ký"; }
+}
+
+function logout() {
+  authToken = null; currentUser = null;
+  localStorage.removeItem("auth_token");
+  document.getElementById("usageWrap").style.display = "none";
+  document.getElementById("authOverlay").style.display = "flex";
+  isFallbackMode = false;
+}
+
+async function checkAuth() {
+  if (!authToken) { document.getElementById("authOverlay").style.display = "flex"; return; }
+  try {
+    const res = await authFetch(`${API_URL}/auth/me`);
+    if (!res.ok) { logout(); return; }
+    const data = await res.json();
+    currentUser = data.user;
+    dailyUsage = data.usage;
+    document.getElementById("authOverlay").style.display = "none";
+    onAuthSuccess();
+  } catch { logout(); }
+}
+
+function onAuthSuccess() {
+  document.getElementById("usageWrap").style.display = "";
+  document.getElementById("usageUserEmail").textContent = currentUser.email;
+  updateUsageBar();
+  fetch(`${API_URL}/health`).then(r=>r.json())
+    .then(()=>setStatus(t("statusInit"),"idle"))
+    .catch(()=>setStatus(t("statusNoBackend"),"idle"));
+}
+
+function updateUsageBar() {
+  if (!currentUser) return;
+  if (currentUser.is_premium) {
+    document.getElementById("usageText").textContent = "";
+    document.getElementById("usageTrack").style.display = "none";
+    document.getElementById("premiumBadge").style.display = "";
+    document.getElementById("upgradeBtn").style.display = "none";
+    document.getElementById("usageFallbackBadge").style.display = "none";
+    return;
+  }
+  const { used, limit } = dailyUsage;
+  const pct = Math.min(100, (used / limit) * 100);
+  const mins = Math.floor(used / 60), secs = used % 60;
+  const lmins = Math.floor(limit / 60);
+  document.getElementById("usageText").textContent = `${mins}:${String(secs).padStart(2,"0")} / ${lmins}:00 hôm nay`;
+  document.getElementById("usageTrack").style.display = "";
+  const fill = document.getElementById("usageFill");
+  fill.style.width = pct + "%";
+  fill.className = "usage-fill" + (pct >= 100 ? " full" : pct >= 80 ? " warn" : "");
+  document.getElementById("upgradeBtn").style.display = pct >= 80 ? "" : "none";
+  document.getElementById("usageFallbackBadge").style.display = isFallbackMode ? "" : "none";
+}
+
+async function refreshUsage() {
+  if (!authToken || currentUser?.is_premium) return;
+  try {
+    const res = await authFetch(`${API_URL}/auth/me`);
+    if (!res.ok) return;
+    const data = await res.json();
+    dailyUsage = data.usage;
+    updateUsageBar();
+  } catch {}
+}
+
+// ── Payment ───────────────────────────────────────────────────────────────────
+function showPayModal() {
+  const { used, limit } = dailyUsage;
+  const mins = Math.floor(used / 60), secs = used % 60;
+  const lmins = Math.floor(limit / 60);
+  document.getElementById("payLimitText").textContent =
+    `Bạn đã dùng ${mins}:${String(secs).padStart(2,"0")} / ${lmins}:00 phút miễn phí hôm nay.`;
+  document.getElementById("payOverlay").style.display = "flex";
+}
+
+function closePayModal() {
+  document.getElementById("payOverlay").style.display = "none";
+  isFallbackMode = true;
+  document.getElementById("usageFallbackBadge").style.display = "";
+}
+
+async function activatePayment() {
+  try {
+    const res = await authFetch(`${API_URL}/payment/activate`, { method: "POST", headers: { "Content-Type": "application/json" } });
+    if (!res.ok) return;
+    const data = await res.json();
+    authToken = data.token;
+    localStorage.setItem("auth_token", authToken);
+    currentUser = data.user;
+    isFallbackMode = false;
+    document.getElementById("payOverlay").style.display = "none";
+    updateUsageBar();
+    showToast("⭐ Premium activated!");
+  } catch {}
+}
+
+// ── Fallback TTS (browser speechSynthesis) ────────────────────────────────────
+function fallbackTTS(text, onEnd) {
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "ja-JP"; utter.rate = 0.9;
+  utter.onend = () => {
+    setStatus(t("statusReady"), "idle"); setBusy(false);
+    document.getElementById("micHint").textContent = t("micHintReply");
+    onEnd?.();
+  };
+  window.speechSynthesis.speak(utter);
+}
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const STRINGS = {
@@ -600,7 +856,7 @@ Your role as Sensei:
   addTyping();
   setStatus(t("statusPreparing"), "thinking");
 
-  fetch(`${API_URL}/chat`, {
+  authFetch(`${API_URL}/chat`, {
     method: "POST", headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ history, level: document.getElementById("levelSelect").value, ui_lang: uiLang })
   })
@@ -634,7 +890,7 @@ function startSession(label, contextPrompt) {
   addTyping();
   setStatus(t("statusPreparing"), "thinking");
 
-  fetch(`${API_URL}/chat`, {
+  authFetch(`${API_URL}/chat`, {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ history, level: document.getElementById("levelSelect").value, ui_lang: uiLang })
   })
@@ -752,7 +1008,7 @@ function showFloatBar(text, romaji, translation, rect) {
   btnW.onclick = async () => {
     btnW.textContent = t("floatTranslating"); btnW.disabled = true;
     try {
-      const res  = await fetch(`${API_URL}/translate`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ word: text, ui_lang: uiLang }) });
+      const res  = await authFetch(`${API_URL}/translate`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ word: text, ui_lang: uiLang }) });
       const data = await res.json();
       saveItem("word", text, data.romaji||"", data.translation||"");
     } catch { saveItem("word", text, "", ""); }
@@ -809,7 +1065,7 @@ function showSavePopup(x, y, text, romaji, translation) {
     btnWord.textContent = t("floatTranslating");
     btnWord.disabled = true;
     try {
-      const res  = await fetch(`${API_URL}/translate`, {
+      const res  = await authFetch(`${API_URL}/translate`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ word: text, ui_lang: uiLang })
       });
@@ -944,7 +1200,7 @@ async function renderLibrary() {
     const el = document.getElementById(`litrans_${item.id}`);
     if (!el) continue;
     try {
-      const res  = await fetch(`${API_URL}/translate`, {
+      const res  = await authFetch(`${API_URL}/translate`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ word: item.text, ui_lang: uiLang })
       });
@@ -962,16 +1218,19 @@ async function renderLibrary() {
 }
 
 async function playLibTTS(text) {
+  if (isFallbackMode) { fallbackTTS(text); return; }
   try {
-    const res = await fetch(`${API_URL}/tts`, {
+    const res = await authFetch(`${API_URL}/tts`, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ text, voice: document.getElementById("voiceSelect").value })
     });
+    if (res.status === 402) { showPayModal(); fallbackTTS(text); return; }
     if (!res.ok) throw new Error();
     const url   = URL.createObjectURL(await res.blob());
     const audio = new Audio(url);
     audio.onended = () => URL.revokeObjectURL(url);
     audio.play();
+    refreshUsage();
   } catch(e) { showToast("❌ TTS lỗi"); }
 }
 
@@ -1086,17 +1345,20 @@ async function startShadowPlay() {
 
 async function playShadowTTS(text) {
   return new Promise(async resolve => {
+    if (isFallbackMode) { fallbackTTS(text, resolve); return; }
     try {
-      const res = await fetch(`${API_URL}/tts`, {
+      const res = await authFetch(`${API_URL}/tts`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ text, voice: document.getElementById("voiceSelect").value })
       });
+      if (res.status === 402) { showPayModal(); fallbackTTS(text, resolve); return; }
       if (!res.ok) { resolve(); return; }
       const url = URL.createObjectURL(await res.blob());
       _shadowAudio = new Audio(url);
       _shadowAudio.onended = () => { URL.revokeObjectURL(url); _shadowAudio=null; resolve(); };
       _shadowAudio.onerror  = () => { URL.revokeObjectURL(url); _shadowAudio=null; resolve(); };
       _shadowAudio.play();
+      refreshUsage();
     } catch { resolve(); }
   });
 }
@@ -1132,7 +1394,7 @@ async function analyzeUserText(userText, wrapEl) {
   document.getElementById("chatArea").scrollTop = 99999;
 
   try {
-    const res  = await fetch(`${API_URL}/analyze`, {
+    const res  = await authFetch(`${API_URL}/analyze`, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ text:userText, level:document.getElementById("levelSelect").value, ui_lang: uiLang })
     });
@@ -1160,17 +1422,26 @@ async function playTTS(text) {
   if (!text) { setBusy(false); setStatus(t("statusReady"),"idle"); return; }
   lastTtsText = text;
   setStatus(t("statusSpeaking"), "speaking");
+  if (isFallbackMode) { fallbackTTS(text); return; }
   try {
-    const res = await fetch(`${API_URL}/tts`, {
+    const res = await authFetch(`${API_URL}/tts`, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ text, voice:document.getElementById("voiceSelect").value })
     });
+    if (res.status === 402) {
+      isFallbackMode = true;
+      updateUsageBar();
+      showPayModal();
+      fallbackTTS(text);
+      return;
+    }
     if (!res.ok) throw new Error((await res.json()).error);
     const url   = URL.createObjectURL(await res.blob());
     const audio = new Audio(url);
     audio.onended = () => { URL.revokeObjectURL(url); setStatus(t("statusReady"),"idle"); setBusy(false); document.getElementById("micHint").textContent=t("micHintReply"); };
     audio.onerror = () => { setStatus(t("statusReady"),"idle"); setBusy(false); };
     audio.play();
+    refreshUsage();
   } catch(e) { setStatus(`TTS: ${e.message}`,"idle"); setBusy(false); }
 }
 function replayTTS() { if (lastTtsText) playTTS(lastTtsText); }
@@ -1184,7 +1455,7 @@ async function askAI(userText) {
   addTyping();
   setStatus(t("statusThinking"), "thinking");
   try {
-    const res  = await fetch(`${API_URL}/chat`, {
+    const res  = await authFetch(`${API_URL}/chat`, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ history, level:document.getElementById("levelSelect").value, ui_lang: uiLang })
     });
@@ -1210,9 +1481,12 @@ function sendText() {
   askAI(text);
 }
 
-// ── Speech Recognition (ElevenLabs STT) ──────────────────────────────────────
+// ── Speech Recognition ────────────────────────────────────────────────────────
 function toggleMic() { if(isBusy) return; isRecording ? stopMic() : startMic(); }
+
 async function startMic() {
+  if (isFallbackMode) { startFallbackMic(); return; }
+
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
   catch { setStatus(t("statusError") + ": mic", "idle"); return; }
@@ -1228,11 +1502,17 @@ async function startMic() {
     try {
       const form = new FormData();
       form.append("file", blob, "audio.webm");
-      const res = await fetch(`${API_URL}/stt`, { method: "POST", body: form });
+      const res = await authFetch(`${API_URL}/stt`, { method: "POST", body: form });
+      if (res.status === 402) {
+        isFallbackMode = true; updateUsageBar(); showPayModal();
+        setStatus(t("statusReady"), "idle");
+        return;
+      }
       const data = await res.json();
       const txt = data.text?.trim();
       if (txt) { addUserBubble(txt); askAI(txt); }
       else setStatus(t("statusReady"), "idle");
+      refreshUsage();
     } catch(e) { setStatus(t("statusError") + ": STT", "idle"); }
   };
 
@@ -1243,21 +1523,52 @@ async function startMic() {
   document.getElementById("micHint").textContent = t("micHintListening");
   setStatus(t("micHintListening"), "idle");
 }
+
 function stopMic() {
-  mediaRecorder?.stop();
+  if (isFallbackMode) { fallbackRecognition?.stop(); }
+  else { mediaRecorder?.stop(); }
   isRecording = false;
   document.getElementById("micBtn").classList.remove("recording");
   document.getElementById("micBtn").textContent = "🎤";
   document.getElementById("micHint").textContent = t("micHintReady");
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-applyLang();
+function startFallbackMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { setStatus("Vui lòng gõ phím (STT miễn phí không khả dụng)", "idle"); return; }
+  fallbackRecognition = new SR();
+  fallbackRecognition.lang = "ja-JP";
+  fallbackRecognition.interimResults = true;
+  fallbackRecognition.onstart = () => {
+    isRecording = true;
+    document.getElementById("micBtn").classList.add("recording");
+    document.getElementById("micBtn").textContent = "⏹";
+    document.getElementById("micHint").textContent = t("micHintListening");
+  };
+  fallbackRecognition.onresult = e => {
+    let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) interim += e.results[i][0].transcript;
+    document.getElementById("liveText").textContent = interim;
+  };
+  fallbackRecognition.onend = () => {
+    isRecording = false;
+    document.getElementById("micBtn").classList.remove("recording");
+    document.getElementById("micBtn").textContent = "🎤";
+    document.getElementById("micHint").textContent = t("micHintReady");
+    const txt = document.getElementById("liveText").textContent.trim();
+    document.getElementById("liveText").textContent = "";
+    if (txt) { addUserBubble(txt); askAI(txt); }
+    else setStatus(t("statusReady"), "idle");
+  };
+  fallbackRecognition.onerror = () => { stopMic(); };
+  fallbackRecognition.start();
+}
 
-fetch(`${API_URL}/health`)
-  .then(r=>r.json())
-  .then(()=>setStatus(t("statusInit"),"idle"))
-  .catch(()=>setStatus(t("statusNoBackend"),"idle"));
+// ── Init ──────────────────────────────────────────────────────────────────────
+// Initialize auth tab state
+document.getElementById("authSubmit").dataset.mode = "login";
+
+applyLang();
+checkAuth();
 </script>
 </body>
 </html>
