@@ -253,6 +253,38 @@
   .pay-test-btn:hover { background:rgba(99,102,241,0.2); }
   .pay-close { background:none; border:none; color:#475569; font-size:0.8rem; cursor:pointer; text-align:center; width:100%; }
   .pay-close:hover { color:#94a3b8; }
+
+  /* ── User menu ── */
+  .user-btn {
+    position: fixed; top: 14px; right: 14px; z-index: 2000;
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; display: none; align-items: center; justify-content: center;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.5);
+  }
+  .user-menu {
+    position: fixed; top: 58px; right: 14px; z-index: 2000;
+    background: #1a1a2e; border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 16px; width: 240px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    overflow: hidden; display: none;
+    animation: fadeUp .15s ease;
+  }
+  .um-header { padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .um-email { font-size: 0.82rem; color: #e2e8f0; font-weight: 600; word-break: break-all; }
+  .um-plan { font-size: 0.72rem; margin-top: 3px; }
+  .um-section { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .um-usage-label { font-size: 0.72rem; color: #475569; margin-bottom: 5px; }
+  .um-usage-track { height: 5px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+  .um-usage-fill { height: 100%; background: linear-gradient(90deg,#22c55e,#6366f1); border-radius: 4px; transition: width .5s ease; }
+  .um-usage-fill.warn { background: linear-gradient(90deg,#f59e0b,#ef4444); }
+  .um-usage-fill.full { background: #ef4444; }
+  .um-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 16px; border: none; background: none; color: #94a3b8; font-size: 0.83rem; cursor: pointer; text-align: left; transition: background .15s; }
+  .um-btn:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+  .um-btn.premium { color: #f59e0b; }
+  .um-btn.danger { color: #f87171; }
+  .um-divider { height: 1px; background: rgba(255,255,255,0.07); }
 </style>
 </head>
 <body>
@@ -293,6 +325,23 @@
   </div>
 </div>
 
+<!-- User menu button -->
+<button class="user-btn" id="userBtn" onclick="toggleUserMenu()"></button>
+<div class="user-menu" id="userMenu">
+  <div class="um-header">
+    <div class="um-email" id="umEmail"></div>
+    <div class="um-plan" id="umPlan"></div>
+  </div>
+  <div class="um-section" id="umUsageSection">
+    <div class="um-usage-label" id="umUsageLabel">0:00 / 10:00 hôm nay</div>
+    <div class="um-usage-track"><div class="um-usage-fill" id="umUsageFill" style="width:0%"></div></div>
+  </div>
+  <div class="um-divider"></div>
+  <button class="um-btn premium" id="umUpgradeBtn" onclick="closeUserMenu();showPayModal()">⭐ Nâng cấp Premium</button>
+  <div class="um-divider"></div>
+  <button class="um-btn danger" onclick="closeUserMenu();logout()">🚪 Đăng xuất</button>
+</div>
+
 <!-- Settings -->
 <div class="settings">
   <div class="setting-group">
@@ -326,22 +375,6 @@
       <button class="btn-sm" id="btnLibrary" onclick="openLibrary()">📚 Danh sách học</button>
       <button class="btn-sm" id="btnReview" onclick="startReview()" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);">🔁 Review</button>
     </div>
-  </div>
-</div>
-
-<!-- Usage bar -->
-<div class="usage-wrap" id="usageWrap" style="display:none;">
-  <div class="usage-top">
-    <span class="usage-user" id="usageUserEmail" onclick="logout()">logout</span>
-    <span id="usageFallbackBadge" class="fallback-badge" style="display:none;">Chế độ miễn phí</span>
-    <button class="upgrade-btn" id="upgradeBtn" onclick="showPayModal()" style="display:none;">⭐ Nâng cấp</button>
-  </div>
-  <div class="usage-row">
-    <span id="usageText">0:00 / 10:00 hôm nay</span>
-    <span id="premiumBadge" style="display:none;font-size:0.7rem;color:#22c55e;">⭐ Premium</span>
-  </div>
-  <div class="usage-track" id="usageTrack" style="display:none;">
-    <div class="usage-fill" id="usageFill" style="width:0%"></div>
   </div>
 </div>
 
@@ -457,7 +490,7 @@ async function submitAuth() {
 function logout() {
   authToken = null; currentUser = null;
   localStorage.removeItem("auth_token");
-  document.getElementById("usageWrap").style.display = "none";
+  document.getElementById("userBtn").style.display = "none";
   document.getElementById("authOverlay").style.display = "flex";
   isFallbackMode = false;
 }
@@ -476,8 +509,9 @@ async function checkAuth() {
 }
 
 function onAuthSuccess() {
-  document.getElementById("usageWrap").style.display = "";
-  document.getElementById("usageUserEmail").textContent = currentUser.email;
+  const btn = document.getElementById("userBtn");
+  btn.style.display = "flex";
+  btn.textContent = (currentUser.email[0] ?? "U").toUpperCase();
   updateUsageBar();
   fetch(`${API_URL}/health`).then(r=>r.json())
     .then(()=>setStatus(t("statusInit"),"idle"))
@@ -486,25 +520,46 @@ function onAuthSuccess() {
 
 function updateUsageBar() {
   if (!currentUser) return;
+  document.getElementById("umEmail").textContent = currentUser.email;
+
   if (currentUser.is_premium) {
-    document.getElementById("usageText").textContent = "";
-    document.getElementById("usageTrack").style.display = "none";
-    document.getElementById("premiumBadge").style.display = "";
-    document.getElementById("upgradeBtn").style.display = "none";
-    document.getElementById("usageFallbackBadge").style.display = "none";
+    document.getElementById("umPlan").innerHTML = `<span style="color:#22c55e">⭐ Premium</span>`;
+    document.getElementById("umUsageSection").style.display = "none";
+    document.getElementById("umUpgradeBtn").style.display = "none";
     return;
   }
+
   const { used, limit } = dailyUsage;
   const pct = Math.min(100, (used / limit) * 100);
   const mins = Math.floor(used / 60), secs = used % 60;
   const lmins = Math.floor(limit / 60);
-  document.getElementById("usageText").textContent = `${mins}:${String(secs).padStart(2,"0")} / ${lmins}:00 hôm nay`;
-  document.getElementById("usageTrack").style.display = "";
-  const fill = document.getElementById("usageFill");
+
+  document.getElementById("umPlan").innerHTML = isFallbackMode
+    ? `<span style="color:#f87171">🆓 Free · Chế độ dự phòng</span>`
+    : `<span style="color:#64748b">🆓 Free</span>`;
+  document.getElementById("umUsageSection").style.display = "";
+  document.getElementById("umUsageLabel").textContent = `${mins}:${String(secs).padStart(2,"0")} / ${lmins}:00 dùng hôm nay`;
+  const fill = document.getElementById("umUsageFill");
   fill.style.width = pct + "%";
-  fill.className = "usage-fill" + (pct >= 100 ? " full" : pct >= 80 ? " warn" : "");
-  document.getElementById("upgradeBtn").style.display = pct >= 80 ? "" : "none";
-  document.getElementById("usageFallbackBadge").style.display = isFallbackMode ? "" : "none";
+  fill.className = "um-usage-fill" + (pct >= 100 ? " full" : pct >= 80 ? " warn" : "");
+  document.getElementById("umUpgradeBtn").style.display = "";
+}
+
+// ── User menu ─────────────────────────────────────────────────────────────────
+function toggleUserMenu() {
+  const menu = document.getElementById("userMenu");
+  const open = menu.style.display === "block";
+  if (open) { closeUserMenu(); return; }
+  updateUsageBar();
+  menu.style.display = "block";
+  setTimeout(() => document.addEventListener("click", closeMenuOutside, { once: true }), 10);
+}
+function closeUserMenu() { document.getElementById("userMenu").style.display = "none"; }
+function closeMenuOutside(e) {
+  if (!document.getElementById("userMenu").contains(e.target) && e.target.id !== "userBtn")
+    closeUserMenu();
+  else if (document.getElementById("userMenu").style.display === "block")
+    setTimeout(() => document.addEventListener("click", closeMenuOutside, { once: true }), 10);
 }
 
 async function refreshUsage() {
