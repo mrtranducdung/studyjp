@@ -1565,7 +1565,71 @@ function sendText() {
 // ── Speech Recognition ────────────────────────────────────────────────────────
 function toggleMic() { if(isBusy) return; isRecording ? stopMic() : startMic(); }
 
-// Cached mic resources — reused across sessions for instant start
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    startWebSpeechMic(SR);
+  } else if (currentUser?.is_premium) {
+    startElevenLabsMic();
+  } else {
+    showToast("⚠️ Nâng cấp lên premium hoặc dùng Chrome để sử dụng mic.");
+    setStatus(t("statusReady"), "idle");
+  }
+}
+
+function stopMic() {
+  if (fallbackRecognition) { fallbackRecognition.stop(); fallbackRecognition = null; }
+  else { mediaRecorder?.stop(); }
+  isRecording = false;
+  document.getElementById("micBtn").classList.remove("recording");
+  document.getElementById("micBtn").textContent = "🎤";
+  document.getElementById("micHint").textContent = t("micHintReady");
+}
+
+// ── STT: Web Speech API (primary — Chrome/Edge) ───────────────────────────────
+function startWebSpeechMic(SR) {
+  const srLang = document.getElementById("srLangSelect")?.value ?? "ja-JP";
+  fallbackRecognition = new SR();
+  fallbackRecognition.lang = srLang;
+  fallbackRecognition.interimResults = true;
+  fallbackRecognition.onstart = () => {
+    isRecording = true;
+    document.getElementById("micBtn").classList.add("recording");
+    document.getElementById("micBtn").textContent = "⏹";
+    document.getElementById("micHint").textContent = t("micHintListening");
+    setStatus(t("micHintListening"), "idle");
+  };
+  fallbackRecognition.onresult = e => {
+    let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) interim += e.results[i][0].transcript;
+    document.getElementById("liveText").textContent = interim;
+  };
+  fallbackRecognition.onend = () => {
+    isRecording = false;
+    fallbackRecognition = null;
+    document.getElementById("micBtn").classList.remove("recording");
+    document.getElementById("micBtn").textContent = "🎤";
+    document.getElementById("micHint").textContent = t("micHintReady");
+    const txt = document.getElementById("liveText").textContent.trim();
+    document.getElementById("liveText").textContent = "";
+    if (txt) { addUserBubble(txt); askAI(txt); }
+    else setStatus(t("statusReady"), "idle");
+  };
+  fallbackRecognition.onerror = e => {
+    stopMic();
+    const msgs = {
+      "not-allowed":   "⚠️ Bị chặn mic. Cho phép microphone trong cài đặt trình duyệt.",
+      "audio-capture": "⚠️ Không tìm thấy microphone.",
+      "network":       "⚠️ Lỗi mạng khi nhận dạng giọng nói.",
+      "no-speech":     "⚠️ Không nghe thấy gì. Thử lại.",
+      "aborted":       null,
+    };
+    const msg = msgs[e.error];
+    if (msg) showToast(msg);
+  };
+  fallbackRecognition.start();
+}
+
+// ── STT: ElevenLabs (fallback — premium only, non-Chrome browsers) ────────────
 let _micStream = null, _micAudioCtx = null, _micAnalyser = null, _micTimeDomain = null;
 
 async function _initMic() {
@@ -1574,9 +1638,9 @@ async function _initMic() {
     return true;
   }
   try {
-    _micStream    = await navigator.mediaDevices.getUserMedia({ audio: true });
-    _micAudioCtx  = new AudioContext();
-    _micAnalyser  = _micAudioCtx.createAnalyser();
+    _micStream     = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _micAudioCtx   = new AudioContext();
+    _micAnalyser   = _micAudioCtx.createAnalyser();
     _micAnalyser.fftSize = 2048;
     _micAudioCtx.createMediaStreamSource(_micStream).connect(_micAnalyser);
     _micTimeDomain = new Float32Array(_micAnalyser.fftSize);
@@ -1584,10 +1648,8 @@ async function _initMic() {
   } catch { return false; }
 }
 
-async function startMic() {
-  if (isFallbackMode) { startFallbackMic(); return; }
-
-  // Show recording UI immediately for zero perceived delay
+async function startElevenLabsMic() {
+  // Show recording UI immediately
   isRecording = true;
   document.getElementById("micBtn").classList.add("recording");
   document.getElementById("micBtn").textContent = "⏹";
@@ -1602,10 +1664,8 @@ async function startMic() {
     return;
   }
 
-  const SILENCE_THRESHOLD = 0.01;
-  const SILENCE_DURATION  = 1500;
-  let silenceTimer = null;
-  let vadActive = false;
+  const SILENCE_THRESHOLD = 0.01, SILENCE_DURATION = 1500;
+  let silenceTimer = null, vadActive = false;
 
   const checkSilence = () => {
     if (!isRecording) return;
@@ -1630,16 +1690,11 @@ async function startMic() {
     setStatus(t("micHintListening"), "idle");
     try {
       const srLang = document.getElementById("srLangSelect")?.value ?? "ja-JP";
-      const langCode = srLang.split("-")[0]; // "ja-JP" → "ja"
       const form = new FormData();
       form.append("file", blob, "audio.webm");
-      form.append("lang", langCode);
+      form.append("lang", srLang.split("-")[0]);
       const res = await authFetch(`${API_URL}/stt`, { method: "POST", body: form });
-      if (res.status === 402) {
-        isFallbackMode = true; updateUsageBar(); showPayModal();
-        setStatus(t("statusReady"), "idle");
-        return;
-      }
+      if (res.status === 402) { showPayModal(); setStatus(t("statusReady"), "idle"); return; }
       const data = await res.json();
       const txt = data.text?.trim();
       if (txt) { addUserBubble(txt); askAI(txt); }
@@ -1650,60 +1705,6 @@ async function startMic() {
 
   mediaRecorder.start();
   requestAnimationFrame(checkSilence);
-}
-
-function stopMic() {
-  if (isFallbackMode) { fallbackRecognition?.stop(); }
-  else { mediaRecorder?.stop(); }
-  isRecording = false;
-  document.getElementById("micBtn").classList.remove("recording");
-  document.getElementById("micBtn").textContent = "🎤";
-  document.getElementById("micHint").textContent = t("micHintReady");
-}
-
-function startFallbackMic() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    showToast("⚠️ Trình duyệt không hỗ trợ mic miễn phí. Dùng Chrome hoặc gõ phím.");
-    setStatus("Gõ phím để tiếp tục", "idle");
-    return;
-  }
-  fallbackRecognition = new SR();
-  fallbackRecognition.lang = "ja-JP";
-  fallbackRecognition.interimResults = true;
-  fallbackRecognition.onstart = () => {
-    isRecording = true;
-    document.getElementById("micBtn").classList.add("recording");
-    document.getElementById("micBtn").textContent = "⏹";
-    document.getElementById("micHint").textContent = t("micHintListening");
-  };
-  fallbackRecognition.onresult = e => {
-    let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) interim += e.results[i][0].transcript;
-    document.getElementById("liveText").textContent = interim;
-  };
-  fallbackRecognition.onend = () => {
-    isRecording = false;
-    document.getElementById("micBtn").classList.remove("recording");
-    document.getElementById("micBtn").textContent = "🎤";
-    document.getElementById("micHint").textContent = t("micHintReady");
-    const txt = document.getElementById("liveText").textContent.trim();
-    document.getElementById("liveText").textContent = "";
-    if (txt) { addUserBubble(txt); askAI(txt); }
-    else setStatus(t("statusReady"), "idle");
-  };
-  fallbackRecognition.onerror = e => {
-    stopMic();
-    const msgs = {
-      "not-allowed":    "⚠️ Bị chặn mic. Cho phép microphone trong cài đặt trình duyệt.",
-      "audio-capture":  "⚠️ Không tìm thấy microphone.",
-      "network":        "⚠️ Lỗi mạng khi nhận dạng giọng nói.",
-      "no-speech":      "⚠️ Không nghe thấy gì. Thử lại.",
-      "aborted":        null,
-    };
-    const msg = msgs[e.error];
-    if (msg) showToast(msg);
-  };
-  fallbackRecognition.start();
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
